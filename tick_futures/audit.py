@@ -6,11 +6,12 @@ import math
 from pathlib import Path
 import sqlite3
 import time
+from datetime import datetime,date,timedelta
 
 from .codec import dumps, loads, sha256
 from .common import CST
 from .runtime import atomic_json
-from .sessions import classify
+from .sessions import classify,planned_sessions
 
 
 def verify_db(path):
@@ -101,6 +102,30 @@ def coverage(root, output=None, *, scan_values=False):
                          "status":"gap_pending_replay","start_ns":target,"end_ns":first,
                          "detail":{"evidence":"local earliest follows requested start; wider source replay needed",
                                    "missing_tick_count":"unknown; legitimate quiet is not excluded"}})
+    asof=time.time_ns()
+    if contracts:
+        first_day=datetime.fromtimestamp(min(c["target_start_ns"] for c in contracts.values())//1_000_000_000,CST).date()
+        last_day=datetime.fromtimestamp(asof//1_000_000_000,CST).date()+timedelta(days=31)
+        days=[date.fromisoformat(d) for d,opened in calendar.items() if opened and first_day.isoformat()<=d<=last_day.isoformat()]
+        for symbol,contract in contracts.items():
+            for day in days:
+                for scope in planned_sessions(day,meta.get(symbol,{}),calendar,overrides):
+                    begin=max(scope["start_ns"],contract["target_start_ns"])
+                    end=min(scope["end_ns"],asof)
+                    if end<=begin:
+                        continue
+                    key=(symbol,scope["trading_day"],scope["session"])
+                    entry=ledger.setdefault(key,{"exchange":symbol.split(".")[0],"product":str(meta.get(symbol,{}).get("product_id","UNKNOWN")),
+                        "symbol":symbol,"trading_day":scope["trading_day"],"session":scope["session"],"rows":0,
+                        "first_event_ns":None,"last_event_ns":None,"collection_status":"evidence_insufficient"})
+                    entry.update({"target_start_ns":begin,"target_end_ns":end,"planned_status":scope["certainty"]})
+                    related=[g for g in gaps if g["symbol"] in (None,symbol) and g.get("start_ns") is not None and g.get("end_ns") is not None
+                             and g["start_ns"]<end and g["end_ns"]>begin]
+                    states={g["status"] for g in related}
+                    if "gap_unrecoverable" in states:
+                        entry["collection_status"]="gap_unrecoverable"
+                    elif "gap_pending_replay" in states:
+                        entry["collection_status"]="gap_pending_replay"
     pair_flags = Counter()
     for detail, in db.execute("SELECT detail FROM events WHERE kind='quality'"):
         pair_flags.update(json.loads(detail)["flags"])
@@ -110,6 +135,7 @@ def coverage(root, output=None, *, scan_values=False):
         "persisted_contracts": len({r["symbol"] for r in ledger.values() if r["rows"]}),
         "persisted_rows": sum(r["rows"] for r in ledger.values()), "origins": dict(origin_counts),
         "gaps": gaps, "gap_states": dict(Counter(g["status"] for g in gaps)),
+        "contracts_with_unverified_prefix":len({g["symbol"] for g in gaps if g["kind"] in ("startup_window_after_target","startup_prefix_unverified") and g["status"]!="window_verified"}),
         "pair_flags": dict(pair_flags), "field_flags": dict(field_flags),
         "upstream_zero_loss_proven": False, "complete_day_night_acceptance": "PENDING",
         "contracts": list(contracts.values()), "ledger": list(ledger.values())}

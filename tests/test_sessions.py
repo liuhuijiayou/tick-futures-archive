@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 import unittest
 
 from tick_futures.common import CST
-from tick_futures.sessions import classify, clock_seconds
+from tick_futures.sessions import classify, clock_seconds,planned_sessions
 
 
 def ns(text):
@@ -24,6 +24,11 @@ class Sessions(unittest.TestCase):
             value = classify(ns(text), self.meta, self.calendar)
             self.assertEqual(value["trading_day"], "2026-11-09")
             self.assertEqual(value["certainty"], "calendar_metadata")
+        plan=planned_sessions(date(2026,11,9),self.meta,self.calendar)
+        night=[s for s in plan if s["session"]=="night-0"][0]
+        self.assertEqual(night["start_ns"],ns("2026-11-06T21:00:00"))
+        self.assertEqual(night["end_ns"],ns("2026-11-07T02:30:00"))
+        self.assertEqual(classify(night["end_ns"]+1,self.meta,self.calendar)["session"],"night-0-tail")
 
     def test_holiday_night_unknown_until_explicit_notice(self):
         for d in ("2026-11-09","2026-11-10"):

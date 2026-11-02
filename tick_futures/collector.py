@@ -253,7 +253,7 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                 else:
                     alert(root,"isolated_backfill_failed",{"job":backfill_job.name,"exit_code":backfill_child.returncode})
                 backfill_child=None
-            if backfill_todo and backfill_child is None and not todo and memory_ok and not initial_only and shutil.disk_usage(root).free>20*1024**3:
+            if backfill_todo and backfill_child is None and len(recovery_jobs)<2 and not todo and memory_ok and not initial_only and shutil.disk_usage(root).free>20*1024**3:
                 batch=[]
                 while backfill_todo and len(batch)<8:
                     symbol=backfill_todo.popleft()
@@ -337,17 +337,21 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                 dirty.discard(symbol)
                 sub["state"] = "subscribed"
                 sub["live_enabled_ns"] = sub.get("live_enabled_ns", time.time_ns())
-                with store.db:
-                    store.db.execute("UPDATE contracts SET live_enabled_ns=coalesce(live_enabled_ns,?),status='subscribed' WHERE symbol=?",
-                                     (sub["live_enabled_ns"], symbol))
-                    contract_target,existing_earliest = store.db.execute("SELECT target_start_ns,earliest_ns FROM contracts WHERE symbol=?",(symbol,)).fetchone()
-                    covered_earliest=min(int(rows[0]["datetime"]),existing_earliest) if existing_earliest is not None else int(rows[0]["datetime"])
-                    if first and covered_earliest > contract_target:
-                        store.gap(symbol,"startup_window_after_target",{"requested_rows":data_length,"maximum_documented_rows":10000},
-                                  status="gap_pending_replay" if len(stable)<10000 else "gap_unrecoverable",
-                                  start_ns=contract_target,end_ns=int(rows[0]["datetime"]))
-                        if len(stable)<10000 and symbol not in backfill_requested:
-                            backfill_todo.append(symbol)
+                # Updating unchanged contract metadata on every live snapshot
+                # could wait on a historical writer transaction and block SDK
+                # reception. Record activation only once per connection.
+                if first:
+                    with store.db:
+                        store.db.execute("UPDATE contracts SET live_enabled_ns=coalesce(live_enabled_ns,?),status='subscribed' WHERE symbol=?",
+                                         (sub["live_enabled_ns"], symbol))
+                        contract_target,existing_earliest = store.db.execute("SELECT target_start_ns,earliest_ns FROM contracts WHERE symbol=?",(symbol,)).fetchone()
+                        covered_earliest=min(int(rows[0]["datetime"]),existing_earliest) if existing_earliest is not None else int(rows[0]["datetime"])
+                        if covered_earliest > contract_target:
+                            store.gap(symbol,"startup_window_after_target",{"requested_rows":data_length,"maximum_documented_rows":10000},
+                                      status="gap_pending_replay" if len(stable)<10000 else "gap_unrecoverable",
+                                      start_ns=contract_target,end_ns=int(rows[0]["datetime"]))
+                            if len(stable)<10000 and symbol not in backfill_requested:
+                                backfill_todo.append(symbol)
                 failures.pop(symbol, None)
             if time.monotonic() - last_heartbeat > 5:
                 metrics["max_queue"] = max(metrics["max_queue"], writer.inbox.qsize())
@@ -392,6 +396,10 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     command.update({"status":"queued" if accepted else "no_pending_contract_gaps","symbols":accepted,"rejected":rejected})
                     atomic_json(request,command)
                 for job,info in list(recovery_jobs.items()):
+                    # At most one historical transaction may wait for this
+                    # writer. Live snapshots get the available queue slots.
+                    if backfill_tokens or any(v[2]!="recovery_backfill" for v in pending.values()):
+                        break
                     receipt_path=Path(job)/"import-receipt.json"
                     receipt=json.loads(receipt_path.read_text()) if receipt_path.exists() else {"symbols":{}}
                     for symbol in info["symbols"]:
@@ -402,6 +410,7 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                         pending[token]=(symbol,None,"recovery_backfill")
                         pending_since[token]=time.monotonic()
                         backfill_tokens[token]=job
+                        break
                     if all(s in receipt["symbols"] for s in info["symbols"]):
                         recovery_jobs.pop(job,None)
             metrics["max_receive_loop_seconds"] = max(metrics["max_receive_loop_seconds"], time.monotonic() - loop_started)
