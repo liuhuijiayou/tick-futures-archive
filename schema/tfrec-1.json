@@ -1,0 +1,22 @@
+{
+  "format": "tfrec-1",
+  "encoding": "ASCII JSON object followed by LF; canonical compact separators; insertion order retained",
+  "object": {"format": "tfrec-1", "value": "tagged scalar or recursively tagged container"},
+  "scalar_tags": {
+    "numpy": ["dtype.str", "original scalar bytes as hexadecimal, preserving dtype byte order"],
+    "float64": ["IEEE754 binary64 network-order 8 bytes as hexadecimal; signed zero and NaN payload retained"],
+    "int": ["base-10 integer string, arbitrary precision"],
+    "bool": ["JSON boolean"],
+    "str": ["JSON escaped Unicode string"],
+    "bytes": ["base64"],
+    "null": [],
+    "pd.NA": [],
+    "pd.NaT": []
+  },
+  "container_tags": {"map": "ordered pairs of tagged keys/values", "list": "tagged elements", "tuple": "tagged elements"},
+  "unsupported_types": "fail closed, never stringify, round, drop, or coerce",
+  "timestamp_rule": "integer nanoseconds are serialized as integers/NumPy int scalars without floating point conversion",
+  "receive_time": "application observation time of stable SDK window, not original per-tick wire arrival time",
+  "replay": "only exact same-source content overlap is suppressed; observations record the decision; all revisions/reset ambiguity retained",
+  "compression": "independently decodable checksum-enabled Zstandard frames; no dictionary; originals hashed before compression"
+}

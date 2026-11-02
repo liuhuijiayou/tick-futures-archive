@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tick-futures"
+version = "0.2.0"
+description = "Domestic futures Tick collection, lossless archival, quality audit and recovery"
+requires-python = ">=3.11"
+dependencies = ["tqsdk==3.10.2", "pandas==3.0.5", "numpy==2.5.2", "zstandard==0.25.0", "psutil>=6,<8"]
+
+[project.optional-dependencies]
+benchmark = ["pyarrow>=20,<24"]
+
+[project.scripts]
+tick-futures = "tick_futures.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["tick_futures*"]

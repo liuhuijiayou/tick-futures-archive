@@ -1,0 +1,30 @@
+{
+  "started_utc": "2026-11-02T06:28:46.769613+00:00",
+  "finished_utc": "2026-11-02T06:28:50.692965+00:00",
+  "results": [
+    {
+      "command": [
+        "/Users/liuhui/.venvs/hf/bin/python",
+        "-m",
+        "tick_futures.verify_samples"
+      ],
+      "exit_code": 0,
+      "stdout": "{\n  \"verified_files\": 71,\n  \"tick_rows\": 90000,\n  \"source_bytes\": 21438320,\n  \"stored_bytes\": 2424461,\n  \"status\": \"all_original_content_hashes_match\"\n}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/Users/liuhui/.venvs/hf/bin/python",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests",
+        "-v"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": "test_config_is_parsed_without_execution (test_auth.ExplicitAuthentication.test_config_is_parsed_without_execution) ... ok\ntest_environment_credentials_have_priority (test_auth.ExplicitAuthentication.test_environment_credentials_have_priority) ... ok\ntest_missing_configuration_is_explicit (test_auth.ExplicitAuthentication.test_missing_configuration_is_explicit) ... ok\ntest_nonliteral_auth_is_rejected_without_execution (test_auth.ExplicitAuthentication.test_nonliteral_auth_is_rejected_without_execution) ... ok\ntest_partial_environment_does_not_fall_back (test_auth.ExplicitAuthentication.test_partial_environment_does_not_fall_back) ... ok\ntest_crossed_quote_is_invalid (test_features.FeatureSemantics.test_crossed_quote_is_invalid) ... ok\ntest_first_row_has_no_increment_and_formula_uses_multiplier (test_features.FeatureSemantics.test_first_row_has_no_increment_and_formula_uses_multiplier) ... ok\ntest_invalid_multiplier_is_rejected (test_features.FeatureSemantics.test_invalid_multiplier_is_rejected) ... ok\ntest_negative_amount_is_retained_and_not_made_zero (test_features.FeatureSemantics.test_negative_amount_is_retained_and_not_made_zero) ... ok\ntest_no_deltas_across_symbol_id_time_or_session_break (test_features.FeatureSemantics.test_no_deltas_across_symbol_id_time_or_session_break) ... ok\ntest_volume_reset_is_not_a_trade_increment (test_features.FeatureSemantics.test_volume_reset_is_not_a_trade_increment) ... ok\ntest_zero_volume_or_zero_book_has_no_ratio (test_features.FeatureSemantics.test_zero_volume_or_zero_book_has_no_ratio) ... ok\n\n----------------------------------------------------------------------\nRan 12 tests in 0.083s\n\nOK\n"
+    }
+  ]
+}

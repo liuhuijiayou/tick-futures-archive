@@ -1,0 +1,268 @@
+"""Immutable independent standard-codec shards and byte-exact recovery."""
+
+from contextlib import ExitStack
+import gzip
+import hashlib
+import importlib.metadata
+import json
+import lzma
+import os
+from pathlib import Path, PurePosixPath
+import shutil
+import sqlite3
+import subprocess
+import tempfile
+import time
+import uuid
+
+import zstandard as zstd
+
+from .codec import sha256
+from .runtime import InstanceLock, atomic_json
+from .store import DDL
+
+FORMAT = "tfarchive-1"
+TARGET_SHARD_BYTES = 256 * 1024 * 1024
+SAFE_ASSET_BYTES = 1024 * 1024 * 1024  # deliberately below GitHub's <2 GiB
+SAFE_ASSETS_PER_RELEASE = 900  # including manifest + completion; hard limit 1000
+
+
+def file_hash(path):
+    digest = hashlib.sha256()
+    with Path(path).open("rb") as stream:
+        while chunk := stream.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def encode(raw, codec, level):
+    if codec == "zstd":
+        return zstd.ZstdCompressor(level=level, write_checksum=True).compress(raw)
+    if codec == "gzip":
+        return gzip.compress(raw, compresslevel=level, mtime=0)
+    if codec == "xz":
+        return lzma.compress(raw, preset=level)
+    if codec == "parquet-zstd":
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+        sink = pa.BufferOutputStream()
+        # A byte-conserving columnar envelope. No CSV numeric parsing/rounding.
+        table = pa.table({"raw_line": pa.array(raw.splitlines(keepends=True), type=pa.binary())})
+        pq.write_table(table, sink, compression="zstd", compression_level=level, use_dictionary=True)
+        return sink.getvalue().to_pybytes()
+    raise ValueError(f"Unsupported codec: {codec}")
+
+
+def decode(raw, codec, *, expected_size=None):
+    if codec == "zstd":
+        return zstd.ZstdDecompressor().decompress(raw, max_output_size=expected_size or TARGET_SHARD_BYTES)
+    if codec == "gzip":
+        return gzip.decompress(raw)
+    if codec == "xz":
+        return lzma.decompress(raw)
+    if codec == "parquet-zstd":
+        import pyarrow as pa
+        import pyarrow.parquet as pq
+        table = pq.read_table(pa.BufferReader(raw), columns=["raw_line"])
+        return b"".join(table["raw_line"].to_pylist())
+    raise ValueError(f"Unsupported codec: {codec}")
+
+
+def safe_relative(value):
+    path = PurePosixPath(value)
+    if path.is_absolute() or ".." in path.parts or not path.parts or str(path) != value or "\\" in value:
+        raise ValueError(f"Unsafe archive path: {value}")
+    return path
+
+
+def create(files, destination, *, codec="zstd", level=9, shard_bytes=TARGET_SHARD_BYTES,
+           scope=None, data_kind="market", parent=None):
+    destination = Path(destination)
+    if destination.exists():
+        raise FileExistsError("Immutable archive destination already exists")
+    if not 1 <= shard_bytes <= TARGET_SHARD_BYTES:
+        raise ValueError("Shard size must be 1..256 MiB of uncompressed source bytes")
+    destination.mkdir(parents=True, mode=0o700)
+    manifest = {"format": FORMAT, "archive_id": uuid.uuid4().hex, "created_ns": time.time_ns(),
+                "data_kind": data_kind, "source": "TqSdk" if data_kind == "market" else "synthetic_fixture",
+                "scope": scope or {}, "collection_integrity": (scope or {}).get("collection_integrity", "evidence_insufficient"),
+                "archive_integrity": "local_roundtrip_verified", "record_format": "tfrec-1",
+                "dictionary": None, "parent": parent, "codec": codec, "level": level,
+                "dependencies": {k: importlib.metadata.version(k) for k in ("numpy", "zstandard")},
+                "files": [], "part_order": []}
+    from .common import BASE
+    manifest["record_schema"] = json.loads((BASE / "schema/tfrec-1.json").read_text())
+    manifest["dependencies"]["pandas"] = importlib.metadata.version("pandas")
+    runtime=BASE/"decoder/runtime-lock.json"
+    if runtime.exists():
+        lock=json.loads(runtime.read_text())
+        manifest["decoder_runtime"]={"tag":lock["tag"],"manifest_sha256":file_hash(runtime),
+                                      "core_wheel_bytes":lock["core_wheel_bytes"],"platform":"macOS arm64 CPython 3.13"}
+    try:
+        manifest["code_commit"] = subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL, text=True).strip()
+    except subprocess.CalledProcessError:
+        manifest["code_commit"] = "uncommitted"
+    began = time.monotonic()
+    for relative, source in files.items():
+        safe_relative(relative)
+        entry = {"path": relative, "raw_bytes": 0, "raw_sha256": None, "parts": []}
+        digest = hashlib.sha256()
+        with Path(source).open("rb") as stream:
+            ordinal = 0
+            while True:
+                raw = stream.read(shard_bytes)
+                if not raw and ordinal:
+                    break
+                stored = encode(raw, codec, level)
+                raw_hash, stored_hash = sha256(raw), sha256(stored)
+                if decode(stored, codec, expected_size=len(raw)) != raw:
+                    raise ValueError("Strict archive round-trip failed")
+                if len(stored) >= SAFE_ASSET_BYTES:
+                    raise ValueError("Compressed shard exceeds safe asset threshold")
+                name = f"part-{len(manifest['part_order']):06d}-{stored_hash[:24]}.{codec}"
+                from .runtime import atomic_bytes
+                atomic_bytes(destination / name, stored)
+                entry["parts"].append({"ordinal": ordinal, "name": name, "raw_bytes": len(raw),
+                    "stored_bytes": len(stored), "raw_sha256": raw_hash, "stored_sha256": stored_hash,
+                    "codec": codec, "level": level, "dictionary": None})
+                manifest["part_order"].append(name)
+                entry["raw_bytes"] += len(raw)
+                digest.update(raw)
+                ordinal += 1
+                if not raw:
+                    break
+        entry["raw_sha256"] = digest.hexdigest()
+        manifest["files"].append(entry)
+    manifest["raw_bytes"] = sum(f["raw_bytes"] for f in manifest["files"])
+    manifest["stored_part_bytes"] = sum(p["stored_bytes"] for f in manifest["files"] for p in f["parts"])
+    manifest["elapsed_seconds"] = time.monotonic() - began
+    atomic_json(destination / "manifest.json", manifest)
+    return manifest
+
+
+def validate_manifest(manifest):
+    if manifest.get("format") != FORMAT or manifest.get("record_format") != "tfrec-1":
+        raise ValueError("Incompatible archive/schema version")
+    if manifest.get("dictionary") is not None:
+        raise ValueError("Unexpected/missing dictionary; this decoder uses independent dictionary-free shards")
+    paths, names = [], []
+    for entry in manifest["files"]:
+        safe_relative(entry["path"])
+        paths.append(entry["path"])
+        for index, part in enumerate(entry["parts"]):
+            safe_relative(part["name"])
+            if part["ordinal"] != index:
+                raise ValueError(f"Wrong shard order: {entry['path']}")
+            if part.get("dictionary") is not None:
+                raise ValueError("Wrong or unsupported dictionary")
+            if not 0 <= part["raw_bytes"] <= TARGET_SHARD_BYTES or part["stored_bytes"] >= SAFE_ASSET_BYTES:
+                raise ValueError("Shard exceeds decoder safety limits")
+            names.append(part["name"])
+        if not entry["parts"]:
+            raise ValueError("File has no shard")
+    if len(paths) != len(set(paths)) or len(names) != len(set(names)):
+        raise ValueError("Duplicate file/shard in manifest")
+    if manifest["part_order"] != names:
+        raise ValueError("Missing shard or wrong manifest shard order")
+    return names
+
+
+def restore(archive, output):
+    archive, output = Path(archive), Path(output)
+    if output.is_symlink():
+        raise ValueError("Symlink recovery destination")
+    # macOS /var and /tmp are system symlinks; normalize the trusted root first.
+    archive, output = archive.resolve(), output.resolve()
+    manifest = json.loads((archive / "manifest.json").read_text())
+    names = validate_manifest(manifest)
+    if output.exists() and any(output.iterdir()):
+        raise FileExistsError("Recovery requires an empty destination")
+    output.mkdir(parents=True, exist_ok=True)
+    # No production-directory or cache fallback exists.
+    for name in names:
+        if not (archive / name).is_file() or (archive / name).is_symlink():
+            raise ValueError(f"Missing/unsafe shard: {name}")
+    recovered = []
+    for entry in manifest["files"]:
+        target = output / entry["path"]
+        if any(p.is_symlink() for p in [output, *target.parents]):
+            raise ValueError("Symlink in recovery destination")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        temp = target.with_name(target.name + ".partial")
+        digest = hashlib.sha256()
+        size = 0
+        with temp.open("xb") as stream:
+            for part in entry["parts"]:
+                path = archive / part["name"]
+                if path.stat().st_size != part["stored_bytes"] or file_hash(path) != part["stored_sha256"]:
+                    raise ValueError(f"Corrupt compressed shard: {part['name']}")
+                raw = decode(path.read_bytes(), part["codec"], expected_size=part["raw_bytes"])
+                if len(raw) != part["raw_bytes"] or sha256(raw) != part["raw_sha256"]:
+                    raise ValueError(f"Wrong decoded content: {part['name']}")
+                stream.write(raw)
+                digest.update(raw)
+                size += len(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+        if size != entry["raw_bytes"] or digest.hexdigest() != entry["raw_sha256"]:
+            raise ValueError(f"Restored original hash mismatch: {entry['path']}")
+        os.replace(temp, target)
+        recovered.append({"path": entry["path"], "bytes": size, "sha256": digest.hexdigest()})
+    report = {"archive_id": manifest["archive_id"], "status": "all_original_bytes_match",
+              "files": recovered, "collection_integrity": manifest["collection_integrity"],
+              "remote_restore": False}
+    atomic_json(output / "restore-report.json", report)
+    return report
+
+
+def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES):
+    """Export a consistent incremental SQLite journal; never modify hot records.
+
+    The DB contains canonical typed raw BLOBs, original global arrival seq, receive
+    times, revisions, observations and gaps. Its physical bytes are also hashed.
+    """
+    root, destination = Path(root), Path(destination)
+    with InstanceLock(root / "seal.lock"):
+        index_path = root / "seal-index.json"
+        index = json.loads(index_path.read_text()) if index_path.exists() else {"last_seq": 0, "archives": []}
+        source = sqlite3.connect(f"file:{root / 'hot.sqlite3'}?mode=ro", uri=True)
+        source.execute("BEGIN")
+        high = source.execute("SELECT coalesce(max(seq),0) FROM records").fetchone()[0]
+        if high <= index["last_seq"]:
+            source.close()
+            return {"status": "no_new_records", "last_seq": high}
+        staging = Path(tempfile.mkdtemp(prefix="seal-", dir=root))
+        snapshot = staging / "journal.sqlite3"
+        target = sqlite3.connect(snapshot)
+        target.executescript(DDL)
+        # Batched copies are outside the receive process. No pandas/float conversions.
+        cursor = source.execute("SELECT * FROM records WHERE seq>? AND seq<=? ORDER BY seq", (index["last_seq"], high))
+        while rows := cursor.fetchmany(2000):
+            target.executemany("INSERT INTO records VALUES(?,?,?,?,?,?,?,?,?)", rows)
+            target.commit()
+        for table in ("checkpoints", "observations", "events", "gaps", "runs", "contracts"):
+            cursor = source.execute(f"SELECT * FROM {table}")
+            columns = len(cursor.description)
+            while rows := cursor.fetchmany(2000):
+                target.executemany(f"INSERT INTO {table} VALUES({','.join('?' for _ in range(columns))})", rows)
+        counts = target.execute("SELECT symbol,count(*),min(event_ns),max(event_ns) FROM records GROUP BY symbol").fetchall()
+        gap_counts = dict(target.execute("SELECT status,count(*) FROM gaps GROUP BY status").fetchall())
+        target.commit()
+        target.close()
+        source.close()
+        files = {"journal/journal.sqlite3": snapshot}
+        for path in (root / "discovery").glob("*"):
+            if path.is_file():
+                files["discovery/" + path.name] = path
+        scope = {"first_seq": index["last_seq"] + 1, "last_seq": high,
+                 "rows": sum(c[1] for c in counts), "contracts": [{"symbol": s, "rows": n, "first_ns": a, "last_ns": b} for s,n,a,b in counts],
+                 "gaps": gap_counts, "collection_integrity": "evidence_insufficient",
+                 "source_semantics": "TqSdk snapshots; no exchange upstream completeness claim"}
+        result = create(files, destination, level=level, shard_bytes=shard_bytes, scope=scope,
+                        parent=index["archives"][-1]["archive_id"] if index["archives"] else None)
+        # Keep staging as a local independent raw copy. Cleanup is never automatic.
+        index["last_seq"] = high
+        index["archives"].append({"archive_id": result["archive_id"], "path": str(destination.resolve()),
+                                  "first_seq": scope["first_seq"], "last_seq": high, "raw_staging": str(staging)})
+        atomic_json(index_path, index)
+        return result
