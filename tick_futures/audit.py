@@ -7,11 +7,46 @@ from pathlib import Path
 import sqlite3
 import time
 from datetime import datetime,date,timedelta
+from numbers import Real
+
+import numpy as np
+import pandas as pd
 
 from .codec import dumps, loads, sha256
 from .common import CST
 from .runtime import atomic_json
 from .sessions import classify,planned_sessions
+
+
+def value_flags(row):
+    """Flag absent/special values without coercing or changing the raw record."""
+    flags=Counter()
+    for name,value in row.items():
+        suffix=None
+        if value is None:
+            suffix="null"
+        elif value is pd.NA:
+            suffix="pandas_na"
+        elif value is pd.NaT:
+            suffix="pandas_nat"
+        elif isinstance(value,(float,np.floating)) and not math.isfinite(value):
+            suffix="nan" if math.isnan(value) else "infinite"
+        if suffix:
+            flags[name+":"+suffix]+=1
+    def finite(value):
+        if not isinstance(value,Real):
+            return False
+        try:
+            return math.isfinite(value)
+        except (TypeError,ValueError,OverflowError):
+            return False
+    for level in range(1,6):
+        names=[f"{side}_{field}{level}" for side in ("bid","ask") for field in ("price","volume")]
+        if not all(name in row for name in names):
+            flags[f"depth_{level}:missing_columns"]+=1
+        elif not all(finite(row[name]) for name in names):
+            flags[f"depth_{level}:invalid_or_absent_values"]+=1
+    return flags
 
 
 def verify_db(path):
@@ -59,6 +94,22 @@ def coverage(root, output=None, *, scan_values=False):
         c = json.loads(calendars[-1].read_text())
         calendar = {r["date"]: r["trading"] for r in c["days"]}
         overrides = c["night_overrides"]
+    identity_warnings=[]
+    for symbol,contract in contracts.items():
+        earliest=contract["actual_earliest_ns"]
+        try:
+            delivery_year=int(meta.get(symbol,{}).get("delivery_year"))
+        except (TypeError,ValueError,OverflowError):
+            continue
+        if earliest is not None and delivery_year-datetime.fromtimestamp(earliest//1_000_000_000,CST).year>=5:
+            # A recurring instrument code can carry very old vendor history.
+            # This is an identity warning, not a fabricated listing date or a
+            # reason to discard the returned original rows.
+            contract["history_identity_status"]="ambiguous_vendor_symbol_history"
+            identity_warnings.append({"symbol":symbol,"earliest_source_event_ns":earliest,
+                "current_delivery_year":delivery_year,"status":"evidence_insufficient",
+                "reason":"source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+                "original_rows_retained":True,"earliest_for_current_contract_proven":False})
     ledger = {}
     field_flags = Counter()
     origin_counts = Counter()
@@ -77,18 +128,7 @@ def coverage(root, output=None, *, scan_values=False):
         entry["last_event_ns"] = max(entry["last_event_ns"], event_ns)
         origin_counts[origin] += 1
         if scan_values:
-            row = loads(raw)
-            for name, value in row.items():
-                if value is None:
-                    field_flags[name + ":null"] += 1
-                elif isinstance(value, (float, __import__("numpy").floating)) and not math.isfinite(value):
-                    field_flags[name + (":nan" if math.isnan(value) else ":infinite")] += 1
-            for level in range(1, 6):
-                names = [f"{side}_{field}{level}" for side in ("bid", "ask") for field in ("price", "volume")]
-                if not all(name in row for name in names):
-                    field_flags[f"depth_{level}:missing_columns"] += 1
-                elif any(row[n] is None or not math.isfinite(row[n]) for n in names):
-                    field_flags[f"depth_{level}:invalid_or_absent_values"] += 1
+            field_flags.update(value_flags(loads(raw)))
     # Explicit zero-evidence rows for every enumerated target; never filter failures.
     for symbol, contract in contracts.items():
         if not any(key[0] == symbol for key in ledger):
@@ -140,7 +180,9 @@ def coverage(root, output=None, *, scan_values=False):
         "persisted_rows": sum(r["rows"] for r in ledger.values()), "origins": dict(origin_counts),
         "gaps": gaps, "gap_states": dict(Counter(g["status"] for g in gaps)),
         "contracts_with_unverified_prefix":len({g["symbol"] for g in gaps if g["kind"] in ("startup_window_after_target","startup_prefix_unverified") and g["status"]!="window_verified"}),
+        "source_history_identity_warnings":identity_warnings,
         "pair_flags": dict(pair_flags), "field_flags": dict(field_flags),
+        "value_scan_performed":scan_values,
         "upstream_zero_loss_proven": False, "complete_day_night_acceptance": "PENDING",
         "contracts": list(contracts.values()), "ledger": list(ledger.values())}
     db.close()

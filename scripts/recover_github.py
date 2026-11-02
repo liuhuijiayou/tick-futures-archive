@@ -88,7 +88,12 @@ def main():
         if (a.output.resolve()/"journal/journal.sqlite3").exists():
             journals.append(a.output.resolve()/"journal/journal.sqlite3")
         results=[json.loads(subprocess.check_output([str(python),"-m","tick_futures","verify-db",str(journal)],env=env,cwd=code)) for journal in journals]
+        source_journals=list(a.output.resolve().glob("archives/*/backfill-jobs/*/journal.sqlite3"))
+        source_journals.extend(a.output.resolve().glob("backfill-jobs/*/journal.sqlite3"))
+        source_results=[json.loads(subprocess.check_output([str(python),"-m","tick_futures","verify-db",str(journal)],env=env,cwd=code)) for journal in source_journals]
         result={"status":"all_journals_verified","journals":len(results),"rows":sum(r["rows"] for r in results)} if results else {"status":"no_journal_in_archive"}
+        result.update({"original_source_journals":len(source_results),"preserved_source_rows":sum(r["rows"] for r in source_results),
+                       "note":"Source rows are preserved delivery evidence, not additional unique market Ticks"})
         report = {"status":"github_only_isolated_recovery_passed","runtime_tag":lock["tag"],
                   "wheel_bytes":sum(w["bytes"] for w in selected),"wheels_downloaded":len(selected),
                   "pip_network_or_cache_used":False,"production_directory_or_environment_used":False,

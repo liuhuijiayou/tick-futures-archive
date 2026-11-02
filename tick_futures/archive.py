@@ -285,6 +285,23 @@ def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES,data_kind
     with InstanceLock(root / "seal.lock"):
         index_path = root / "seal-index.json"
         index = json.loads(index_path.read_text()) if index_path.exists() else {"last_seq": 0, "archives": []}
+        original_sources={}
+        source_files=dict(index.get("backfill_source_files",{}))
+        for completed in (root/"backfill-jobs").glob("*/completed.json"):
+            job=json.loads(completed.read_text())
+            journal=completed.parent/"hot.sqlite3"
+            if journal.is_symlink() or not journal.resolve().is_relative_to((root/"backfill-jobs").resolve()) or Path(job["journal"]).resolve()!=journal.resolve():
+                raise ValueError("Backfill source must be the immutable journal inside its job directory")
+            name=completed.parent.name
+            previous=source_files.get(name)
+            if previous and previous!=job["journal_sha256"]:
+                raise ValueError("Immutable backfill source identity changed: "+name)
+            if not previous:
+                if file_hash(journal)!=job["journal_sha256"]:
+                    raise ValueError("Backfill source hash mismatch before sealing: "+name)
+                original_sources["backfill-jobs/"+name+"/journal.sqlite3"]=journal
+                original_sources["backfill-jobs/"+name+"/completed.json"]=completed
+                source_files[name]=job["journal_sha256"]
         source = sqlite3.connect(f"file:{root / 'hot.sqlite3'}?mode=ro", uri=True)
         source.execute("BEGIN")
         high = source.execute("SELECT coalesce(max(seq),0) FROM records").fetchone()[0]
@@ -293,7 +310,7 @@ def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES,data_kind
         latest=root/"discovery/universe-latest.json"
         metadata_changed=latest.exists() and file_hash(latest)!=index.get("metadata_files",{}).get(latest.name)
         audit_changed=any(value!=index.get("watermarks",{}).get(table,0) for table,value in watermarks.items())
-        if high <= index["last_seq"] and not audit_changed and not metadata_changed:
+        if high <= index["last_seq"] and not audit_changed and not metadata_changed and not original_sources:
             source.close()
             return {"status": "no_new_records", "last_seq": high}
         staging = Path(tempfile.mkdtemp(prefix="seal-", dir=root))
@@ -327,7 +344,7 @@ def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES,data_kind
         target.commit()
         target.close()
         source.close()
-        files = {"journal/journal.sqlite3": snapshot}
+        files = {"journal/journal.sqlite3": snapshot,**original_sources}
         metadata_files=dict(index.get("metadata_files",{}))
         for path in (root / "discovery").glob("*"):
             if path.is_file():
@@ -338,6 +355,7 @@ def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES,data_kind
         scope = {"first_seq": index["last_seq"] + 1, "last_seq": high,
                  "rows": sum(c[1] for c in counts), "contracts": [{"symbol": s, "rows": n, "first_ns": a, "last_ns": b} for s,n,a,b in counts],
                  "gaps": gap_counts, "collection_integrity": "evidence_insufficient",
+                 "original_source_journals_added":len(original_sources)//2,
                  "source_semantics": "TqSdk snapshots; no exchange upstream completeness claim"}
         result = create(files, destination, level=level, shard_bytes=shard_bytes, scope=scope,data_kind=data_kind,
                         parent=index["archives"][-1]["archive_id"] if index["archives"] else None)
@@ -345,6 +363,7 @@ def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES,data_kind
         index["last_seq"] = high
         index["watermarks"]=watermarks
         index["metadata_files"]=metadata_files
+        index["backfill_source_files"]=source_files
         index["archives"].append({"archive_id": result["archive_id"], "path": str(destination.resolve()),
                                   "first_seq": scope["first_seq"], "last_seq": high, "raw_staging": str(staging)})
         atomic_json(index_path, index)

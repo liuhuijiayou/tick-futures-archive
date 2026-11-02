@@ -6,7 +6,8 @@ observation. IDs are scoped evidence, never a database uniqueness constraint.
 
 from collections import Counter
 import json
-import hashlib
+from concurrent.futures import ProcessPoolExecutor
+import multiprocessing
 from pathlib import Path
 import queue
 import shutil
@@ -16,6 +17,7 @@ import time
 
 from .codec import dumps, loads, sha256
 from .runtime import redact_errors
+from .preparation import encode_rows,prepare_journal,initialize_worker
 
 DDL = """
 CREATE TABLE IF NOT EXISTS records (
@@ -45,7 +47,7 @@ def fingerprints(rows):
     return [sha256(dumps(row)) for row in rows]
 
 
-def overlap_plan(old_tail, rows, persisted_fingerprints=None):
+def overlap_plan(old_tail, rows, persisted_fingerprints=None, *, new_fingerprints=None):
     """Use exact content anchors, never latest-ID reset or timestamp equality.
 
     Revisions in the retained overlap are appended. If continuity is ambiguous,
@@ -53,7 +55,7 @@ def overlap_plan(old_tail, rows, persisted_fingerprints=None):
     """
     if not old_tail:
         return rows, {"decision": "initial_window", "replayed": 0}
-    new_fp = fingerprints(rows)
+    new_fp = fingerprints(rows) if new_fingerprints is None else new_fingerprints
     old_fp = fingerprints(old_tail)
     # Longest suffix match is preferred; a changed last record can use an older anchor.
     for old_index in range(len(old_tail) - 1, -1, -1):
@@ -84,12 +86,12 @@ class Store:
         self.root.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.path = self.root / "hot.sqlite3"
         self.min_free_bytes = min_free_bytes
-        self._verified_journals={}
         self.db = sqlite3.connect(self.path, timeout=30)
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA synchronous=FULL")
         self.db.execute("PRAGMA fullfsync=ON")
         self.db.execute("PRAGMA checkpoint_fullfsync=ON")
+        self.db.execute("PRAGMA cache_size=-65536")  # bounded 64 MiB, allocated on demand
         self.db.execute("PRAGMA foreign_keys=ON")
         self.db.executescript(DDL)
         self.db.commit()
@@ -113,11 +115,16 @@ class Store:
         return (item[0], loads(item[1])) if item else (0, [])
 
     def ingest(self, symbol, rows, run, origin, *, received_ns=None, full_window=True, tail=None,
-               window_info=None, update_checkpoint=True):
+               window_info=None, update_checkpoint=True, encoded_rows=None):
         if not rows and tail is None:
             return {"written": 0}
         if shutil.disk_usage(self.root).free < self.min_free_bytes:
             raise OSError("Disk free space below collector reserve; checkpoint not advanced")
+        encoded=encode_rows(rows) if encoded_rows is None else encoded_rows
+        if len(encoded)!=len(rows) or any(sha256(raw)!=fp for raw,fp in encoded):
+            raise ValueError("Prepared raw record hash/count mismatch; checkpoint not advanced")
+        raw_by_identity={id(row):item for row,item in zip(rows,encoded)}
+        input_fingerprints=[fp for raw,fp in encoded]
         received_ns = received_ns or time.time_ns()
         previous_seq, old_tail = self.checkpoint(symbol)
         full_first_ns=int(rows[0]["datetime"]) if rows else None
@@ -133,21 +140,27 @@ class Store:
             if not update_checkpoint:
                 remaining=Counter(known or [])
                 selected=[]
-                for row,fp in zip(rows,fingerprints(rows)):
+                for row,fp in zip(rows,input_fingerprints):
                     if remaining[fp]:
                         remaining[fp]-=1
                     else:
                         selected.append(row)
                 detail={"decision":"historical_content_replay_checked","replayed":len(rows)-len(selected)}
             else:
-                selected, detail = overlap_plan(old_tail, rows, known)
+                selected, detail = overlap_plan(old_tail, rows, known,new_fingerprints=input_fingerprints)
         else:
             detail = {"decision": "committed_window_diff", "replayed": 0}
             selected = rows
         # Preserve the application delivery order even for idempotent replays.
         # Each fingerprint resolves to an immutable canonical raw BLOB.
-        detail["input_fingerprints_in_order"] = fingerprints(rows)
+        detail["input_fingerprints_in_order"] = input_fingerprints
         rows = selected
+        latest_by_id={}
+        if rows:
+            lo,hi=min(int(r["id"]) for r in rows),max(int(r["id"]) for r in rows)
+            # One range read replaces one indexed SELECT per inserted Tick.
+            # Later entries win exactly as ORDER BY seq DESC LIMIT 1 did.
+            latest_by_id=dict(self.db.execute("SELECT sdk_id,fingerprint FROM records WHERE symbol=? AND sdk_id BETWEEN ? AND ? ORDER BY seq",(symbol,lo,hi)))
         detail.update({"input_rows": input_count, "window": window_info or {}, "origin": origin})
         last_seq = previous_seq
         first_written_seq=None
@@ -164,14 +177,13 @@ class Store:
                          status=("gap_pending_replay" if (window_info or {}).get("configured_rows",10000)<10000 else "gap_unrecoverable") if out_of_window else "evidence_insufficient",
                          start_ns=prior_ns, end_ns=window_first)
             for row in rows:
-                raw = dumps(row)
-                fingerprint = sha256(raw)
+                raw,fingerprint=raw_by_identity[id(row)]
                 event_ns, sdk_id = int(row["datetime"]), int(row["id"])
-                same_id = self.db.execute("SELECT fingerprint FROM records WHERE symbol=? AND sdk_id=? ORDER BY seq DESC LIMIT 1",
-                                          (symbol, sdk_id)).fetchone()
-                if same_id and same_id[0] != fingerprint:
-                    self.event(symbol, "same_id_different_content", {"sdk_id": sdk_id, "previous_fingerprint": same_id[0],
+                same_id = latest_by_id.get(sdk_id)
+                if same_id and same_id != fingerprint:
+                    self.event(symbol, "same_id_different_content", {"sdk_id": sdk_id, "previous_fingerprint": same_id,
                                "fingerprint": fingerprint, "meaning": "revision or reset; both retained"})
+                latest_by_id[sdk_id]=fingerprint
                 if previous is not None:
                     flags = audit_pair(previous, row)
                     if flags:
@@ -213,36 +225,14 @@ class Store:
                     self.db.execute("UPDATE gaps SET status='window_verified' WHERE seq=?",(gap_id,))
         return {"written": len(rows), "seq": last_seq, "decision": detail["decision"]}
 
-    def ingest_journal(self,path,symbol,run,info):
+    def ingest_journal(self,path,symbol,run,info,*,prepared=None):
         """Cold helper output is reconciled by the single durable writer.
 
         Historical arrival can never roll the live checkpoint back or forward.
         """
-        path=Path(path).resolve()
-        stat=path.stat()
-        expected=info.get("source_journal_sha256")
-        identity=(stat.st_size,stat.st_mtime_ns)
-        if expected and self._verified_journals.get(str(path))!=(identity,expected):
-            with path.open("rb") as stream:
-                actual=hashlib.file_digest(stream,"sha256").hexdigest()
-            if actual!=expected:
-                raise ValueError("Backfill journal file hash mismatch")
-            self._verified_journals[str(path)]=(identity,expected)
-        source=sqlite3.connect(f"file:{path}?mode=ro",uri=True)
-        try:
-            rows=[]
-            observed=None
-            for fingerprint,raw,received in source.execute("SELECT fingerprint,raw,received_ns FROM records WHERE symbol=? ORDER BY seq",(symbol,)):
-                if sha256(raw)!=fingerprint or dumps(loads(raw))!=raw:
-                    raise ValueError("Backfill journal raw hash/type/bit mismatch")
-                rows.append(loads(raw))
-                observed=received
-            gaps=source.execute("SELECT count(*) FROM gaps WHERE (symbol=? OR symbol IS NULL) AND status!='window_verified'",(symbol,)).fetchone()[0]
-            source_runs=[{"run":r,"detail":json.loads(d)} for r,d in source.execute("SELECT run,detail FROM runs")]
-            return self.ingest(symbol,rows,run,"recovery_backfill",received_ns=observed,
-                full_window=True,update_checkpoint=False,window_info={**info,"configured_rows":10000,"source_journal_gap_count":gaps,"source_runs":source_runs})
-        finally:
-            source.close()
+        prepared=prepare_journal(path,symbol,info) if prepared is None else prepared
+        return self.ingest(symbol,prepared["rows"],run,"recovery_backfill",received_ns=prepared["received_ns"],
+            full_window=True,update_checkpoint=False,window_info=prepared["window_info"],encoded_rows=prepared["encoded"])
 
 
 def audit_pair(previous, row):
@@ -267,13 +257,14 @@ def audit_pair(previous, row):
 
 class DurableWriter:
     """Bounded one-writer queue. ACK is sent only after SQLite COMMIT succeeds."""
-    def __init__(self, root, *, capacity=8, min_free_bytes=512 * 1024 * 1024):
+    def __init__(self, root, *, capacity=8, min_free_bytes=512 * 1024 * 1024,preparation_workers=0):
         self.root = root
         self.capacity = capacity
         self.min_free_bytes = min_free_bytes
         self.inbox = queue.Queue(capacity)
         self.acks = queue.Queue()
         self.error = None
+        self.executor=ProcessPoolExecutor(max_workers=preparation_workers,mp_context=multiprocessing.get_context("spawn"),initializer=initialize_worker) if preparation_workers else None
         self.thread = threading.Thread(target=self._work, name="durable-ticks", daemon=True)
         self.thread.start()
 
@@ -286,13 +277,17 @@ class DurableWriter:
                 if message is None:
                     self.inbox.task_done()
                     break
-                token, operation, args, kwargs = message
+                token, operation, args, kwargs, prepared = message
                 if operation=="journal":
                     try:
+                        if prepared is not None:
+                            kwargs["prepared"]=prepared.result()
                         result=store.ingest_journal(*args,**kwargs)
                     except (ValueError,sqlite3.DatabaseError) as exc:
                         result={"written":0,"error_type":type(exc).__name__,"error":str(exc)}
                 else:
+                    if prepared is not None:
+                        kwargs["encoded_rows"]=prepared.result()
                     result = store.ingest(*args, **kwargs)
                 self.acks.put((token, result))
                 self.inbox.task_done()
@@ -301,14 +296,22 @@ class DurableWriter:
         finally:
             if store:
                 store.close()
+            if self.executor:
+                self.executor.shutdown(wait=True,cancel_futures=True)
 
     def submit(self, token, *args, **kwargs):
         self.check()
-        self.inbox.put_nowait((token, "ingest", args, kwargs))
+        if self.inbox.full():
+            raise queue.Full
+        prepared=self.executor.submit(encode_rows,args[1]) if self.executor else None
+        self.inbox.put_nowait((token, "ingest", args, kwargs,prepared))
 
     def submit_journal(self,token,path,symbol,run,info):
         self.check()
-        self.inbox.put_nowait((token,"journal",(path,symbol,run,info),{}))
+        if self.inbox.full():
+            raise queue.Full
+        prepared=self.executor.submit(prepare_journal,path,symbol,info) if self.executor else None
+        self.inbox.put_nowait((token,"journal",(path,symbol,run,info),{},prepared))
 
     def check(self):
         if self.error:

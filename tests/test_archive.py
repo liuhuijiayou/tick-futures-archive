@@ -89,6 +89,34 @@ class Archive(unittest.TestCase):
                     upload(root/"archive", "owner/repo", "tag")
                 release.assert_not_called()
 
+    def test_parallel_import_keeps_the_original_helper_arrival_journal_in_archive(self):
+        from tick_futures.archive import file_hash
+        import sqlite3
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            job=root/"hot/backfill-jobs/fixture"
+            helper=Store(job,min_free_bytes=0)
+            helper.ingest("TEST.a",[row(1)],"helper","initial_backfill")
+            helper.ingest("TEST.b",[row(1)],"helper","initial_backfill")
+            helper.ingest("TEST.a",[row(2)],"helper","realtime_update",full_window=False)
+            helper.close()
+            journal=job/"hot.sqlite3"
+            digest=file_hash(journal)
+            (job/"completed.json").write_text(json.dumps({"journal":str(journal.resolve()),"journal_sha256":digest}))
+            main=Store(root/"hot",min_free_bytes=0)
+            main.ingest_journal(journal,"TEST.a","parent",{"source_journal_sha256":digest})
+            main.ingest_journal(journal,"TEST.b","parent",{"source_journal_sha256":digest})
+            main.close()
+            result=seal(root/"hot",root/"a")
+            self.assertEqual(result["scope"]["original_source_journals_added"],1)
+            restore(root/"a",root/"restored")
+            recovered=root/"restored/backfill-jobs/fixture/journal.sqlite3"
+            self.assertEqual(file_hash(recovered),digest)
+            check=sqlite3.connect(recovered)
+            self.assertEqual([r[0] for r in check.execute("SELECT symbol FROM records ORDER BY seq")],["TEST.a","TEST.b","TEST.a"])
+            check.close()
+            self.assertEqual(seal(root/"hot",root/"unused")["status"],"no_new_records")
+
     def test_gap_revision_without_new_ticks_is_archived_and_chain_restores(self):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder)

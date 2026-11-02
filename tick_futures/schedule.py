@@ -64,6 +64,7 @@ def manage(action, root, auth_config=None):
         root.mkdir(parents=True,exist_ok=True,mode=0o700)
         (root/"logs").mkdir(exist_ok=True,mode=0o700)
         settings={"auth_config":str(auth_config),"data_length":1000,
+                    "preparation_workers":2,"initialization_concurrency":8,
                     "min_free_gib":5,"archive_level":9,"github_repo":"liuhuijiayou/tick-futures-archive",
                     "backup_rights_status":"PENDING","installed_ns":time.time_ns()}
         if config_path(root).exists():
@@ -162,4 +163,5 @@ def service(role, root):
     from .collector import collect
     # launchd restarts on unexpected exit. Keep one receiver alive through
     # lunch/midnight/weekends; calendar is for auditing, never for cutting data.
-    return collect(root,data_length=config["data_length"],min_free_bytes=int(config["min_free_gib"]*1024**3))
+    return collect(root,data_length=config["data_length"],min_free_bytes=int(config["min_free_gib"]*1024**3),
+                   preparation_workers=config.get("preparation_workers",2),initial_concurrency=config.get("initialization_concurrency",8))

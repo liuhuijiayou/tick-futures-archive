@@ -69,15 +69,20 @@ def changed_rows(current, committed):
 
 
 def collect(root, *, symbols=None, data_length=10000, seconds=None, max_contracts=None,
-            min_free_bytes=512 * 1024 * 1024, refresh_seconds=300,initial_only=False):
+            min_free_bytes=512 * 1024 * 1024, refresh_seconds=300,initial_only=False,
+            preparation_workers=0,initial_concurrency=4):
+    if not 0<=preparation_workers<=4 or not 1<=initial_concurrency<=16:
+        raise ValueError("Preparation workers must be 0..4 and initialization concurrency 1..16")
     root = Path(root).resolve()
     with InstanceLock(root / "collector.lock"):
         return _collect(root, symbols=symbols, data_length=data_length, seconds=seconds,
                         max_contracts=max_contracts, min_free_bytes=min_free_bytes,
-                        refresh_seconds=refresh_seconds,initial_only=initial_only)
+                        refresh_seconds=refresh_seconds,initial_only=initial_only,
+                        preparation_workers=preparation_workers,initial_concurrency=initial_concurrency)
 
 
-def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_bytes, refresh_seconds,initial_only):
+def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_bytes, refresh_seconds,initial_only,
+             preparation_workers,initial_concurrency):
     os.umask(0o077)
     run = uuid.uuid4().hex
     target_start = time.time_ns()
@@ -102,7 +107,7 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
         store.db.execute("INSERT INTO runs VALUES(?,?,NULL,'running',?)", (run, target_start,
                          json.dumps({"source": "TqSdk", "account_mode": "TqSim", "requested_length": data_length,
                                      "source_sha256":sha256(source_bytes),"code_commit":code_commit})))
-    writer = DurableWriter(root, capacity=8, min_free_bytes=min_free_bytes)
+    writer = DurableWriter(root, capacity=8, min_free_bytes=min_free_bytes,preparation_workers=preparation_workers)
     pending = {}
     frames = {}
     committed = {}
@@ -236,7 +241,7 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
             initializing += sum(not api.is_serial_ready(f) for f in upgrade_frames.values())
             memory_ok = process.memory_info().rss < 12*1024**3 and psutil.virtual_memory().available>4*1024**3
             metrics["initialization_paused_for_memory"] = not memory_ok
-            if todo and memory_ok and initializing < 4 and writer.inbox.qsize() < 4 and len(pending) < 8:
+            if todo and memory_ok and initializing < initial_concurrency and writer.inbox.qsize() < 4 and len(pending) < 8:
                 symbol = todo.popleft()
                 subscriptions[symbol] = {"started": time.monotonic(), "state": "initializing"}
                 async def subscribe(symbol=symbol):
@@ -370,6 +375,7 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     "backfill_helper_pid":backfill_child.pid if backfill_child else None,"backfill_pending_contracts":len(backfill_todo),
                     "backfill_ready_jobs":len(recovery_jobs),
                     "backfill_waiting_import_contracts":sum(len(set(info["symbols"])-set(json.loads((Path(job)/"import-receipt.json").read_text())["symbols"] if (Path(job)/"import-receipt.json").exists() else [])) for job,info in recovery_jobs.items()),
+                    "preparation_workers":preparation_workers,"initialization_concurrency":initial_concurrency,
                     "coverage_status": "PENDING full day and source replay verification"}
                 atomic_json(root / "heartbeat.json", status)
                 last_heartbeat = time.monotonic()
@@ -397,24 +403,26 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     backfill_todo.extend(accepted)
                     command.update({"status":"queued" if accepted else "no_pending_contract_gaps","symbols":accepted,"rejected":rejected})
                     atomic_json(request,command)
-                for job,info in list(recovery_jobs.items()):
-                    # At most one historical transaction may wait for this
-                    # writer. Live snapshots get the available queue slots.
-                    if backfill_tokens or any(v[2]!="recovery_backfill" for v in pending.values()):
-                        break
-                    receipt_path=Path(job)/"import-receipt.json"
-                    receipt=json.loads(receipt_path.read_text()) if receipt_path.exists() else {"symbols":{}}
-                    for symbol in info["symbols"]:
-                        if symbol in receipt["symbols"] or symbol in {v[0] for v in pending.values()} or writer.inbox.full():
-                            continue
-                        token=uuid.uuid4().hex
-                        writer.submit_journal(token,info["journal"],symbol,run,{"metadata_version":info["metadata_version"],"source_journal_sha256":info["journal_sha256"],"job":Path(job).name})
-                        pending[token]=(symbol,None,"recovery_backfill")
-                        pending_since[token]=time.monotonic()
-                        backfill_tokens[token]=job
-                        break
-                    if all(s in receipt["symbols"] for s in info["symbols"]):
-                        recovery_jobs.pop(job,None)
+            # Bounded parallel CPU preparation, one ordered transactional writer.
+            # Dispatch on every receive loop, not only the five-second heartbeat.
+            # Keep cold work out of initial admission and give live work priority.
+            for job,info in list(recovery_jobs.items()):
+                cold_limit=max(1,min(2,preparation_workers))
+                if todo or len(backfill_tokens)>=cold_limit or any(v[2]!="recovery_backfill" for v in pending.values()):
+                    break
+                receipt_path=Path(job)/"import-receipt.json"
+                receipt=json.loads(receipt_path.read_text()) if receipt_path.exists() else {"symbols":{}}
+                for symbol in info["symbols"]:
+                    if symbol in receipt["symbols"] or symbol in {v[0] for v in pending.values()} or writer.inbox.full():
+                        continue
+                    token=uuid.uuid4().hex
+                    writer.submit_journal(token,info["journal"],symbol,run,{"metadata_version":info["metadata_version"],"source_journal_sha256":info["journal_sha256"],"job":Path(job).name})
+                    pending[token]=(symbol,None,"recovery_backfill")
+                    pending_since[token]=time.monotonic()
+                    backfill_tokens[token]=job
+                    break
+                if all(s in receipt["symbols"] for s in info["symbols"]):
+                    recovery_jobs.pop(job,None)
             metrics["max_receive_loop_seconds"] = max(metrics["max_receive_loop_seconds"], time.monotonic() - loop_started)
             # Refresh on a slow cadence and before day/night preopen. Rebuild only
             # after draining; it is not a health-check restart.

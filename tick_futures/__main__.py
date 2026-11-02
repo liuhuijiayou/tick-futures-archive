@@ -18,7 +18,12 @@ def main(argv=None):
         parser.add_argument("--seconds", type=float, default=30 if name == "backfill" else None)
         parser.add_argument("--max-contracts", type=int)
         parser.add_argument("--min-free-gib", type=float, default=5)
+        parser.add_argument("--prepare-workers",type=int,default=2,choices=range(5))
+        parser.add_argument("--init-concurrency",type=int,default=8,choices=range(1,17))
+        parser.add_argument("--initial-only",action="store_true",help="Stop after the complete initial window is committed")
     sub.add_parser("status")
+    parser = sub.add_parser("overview")
+    parser.add_argument("--output",type=Path)
     parser = sub.add_parser("audit")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--scan-values", action="store_true")
@@ -82,7 +87,8 @@ def main(argv=None):
             else:
                 result = collect(args.root, symbols=args.symbols, data_length=args.data_length,
                                  seconds=args.seconds, max_contracts=args.max_contracts,
-                                 min_free_bytes=int(args.min_free_gib * 1024 ** 3))
+                                 min_free_bytes=int(args.min_free_gib * 1024 ** 3),initial_only=args.initial_only,
+                                 preparation_workers=args.prepare_workers,initial_concurrency=args.init_concurrency)
         elif args.command == "status":
             import time
             path = args.root / "heartbeat.json"
@@ -93,6 +99,10 @@ def main(argv=None):
             from .audit import coverage
             report = coverage(args.root, args.output, scan_values=args.scan_values)
             result = {k: v for k,v in report.items() if k not in ("contracts", "ledger", "gaps")}
+        elif args.command == "overview":
+            from .overview import overview
+            report=overview(args.root,args.output)
+            result={k:v for k,v in report.items() if k!="contracts"}
         elif args.command == "verify-db":
             from .audit import verify_db
             result = verify_db(args.path or args.root / "hot.sqlite3")
