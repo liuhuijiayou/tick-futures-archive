@@ -84,11 +84,11 @@ def main():
         if a.archive_id:
             command.extend(["--archive-id",a.archive_id])
         subprocess.run(command,env=env,cwd=code,check=True)
-        journal = a.output.resolve()/"journal/journal.sqlite3"
-        if journal.exists():
-            result = json.loads(subprocess.check_output([str(python),"-m","tick_futures","verify-db",str(journal)],env=env,cwd=code))
-        else:
-            result = {"status":"no_journal_in_archive"}
+        journals=list(a.output.resolve().glob("archives/*/journal/journal.sqlite3"))
+        if (a.output.resolve()/"journal/journal.sqlite3").exists():
+            journals.append(a.output.resolve()/"journal/journal.sqlite3")
+        results=[json.loads(subprocess.check_output([str(python),"-m","tick_futures","verify-db",str(journal)],env=env,cwd=code)) for journal in journals]
+        result={"status":"all_journals_verified","journals":len(results),"rows":sum(r["rows"] for r in results)} if results else {"status":"no_journal_in_archive"}
         report = {"status":"github_only_isolated_recovery_passed","runtime_tag":lock["tag"],
                   "wheel_bytes":sum(w["bytes"] for w in selected),"wheels_downloaded":len(selected),
                   "pip_network_or_cache_used":False,"production_directory_or_environment_used":False,

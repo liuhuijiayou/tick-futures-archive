@@ -1,0 +1,286 @@
+{
+  "pid": 49809,
+  "started_ns": 1793604251297025000,
+  "ended_ns": 1793604281326276000,
+  "network_scope": "process-only nettop, first cumulative sample excluded; configured interval 1 second; initialization/after-close sample, not full-session peak",
+  "network_deltas": [
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 1377,
+      "bytes_out": 202
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 21352,
+      "bytes_out": 107
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 1299,
+      "bytes_out": 169
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 35422,
+      "bytes_out": 105
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 1342,
+      "bytes_out": 167
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 12721,
+      "bytes_out": 208
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 1634,
+      "bytes_out": 206
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 12205,
+      "bytes_out": 176
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 1364,
+      "bytes_out": 171
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 26250,
+      "bytes_out": 104
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 1355,
+      "bytes_out": 200
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 27328,
+      "bytes_out": 106
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    },
+    {
+      "bytes_in": 1298,
+      "bytes_out": 171
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 174
+    },
+    {
+      "bytes_in": 48164,
+      "bytes_out": 33
+    },
+    {
+      "bytes_in": 0,
+      "bytes_out": 0
+    }
+  ],
+  "peak_bytes_in_per_configured_second": 48164,
+  "peak_bytes_out_per_configured_second": 208,
+  "process_samples": [
+    {
+      "observed_ns": 1793604251296986000,
+      "cpu_percent_one_core": 97.3,
+      "rss_bytes": 713834496
+    },
+    {
+      "observed_ns": 1793604252298001000,
+      "cpu_percent_one_core": 77.3,
+      "rss_bytes": 690569216
+    },
+    {
+      "observed_ns": 1793604253303070000,
+      "cpu_percent_one_core": 74.4,
+      "rss_bytes": 684867584
+    },
+    {
+      "observed_ns": 1793604254308132000,
+      "cpu_percent_one_core": 91.4,
+      "rss_bytes": 690110464
+    },
+    {
+      "observed_ns": 1793604255313196000,
+      "cpu_percent_one_core": 97.9,
+      "rss_bytes": 690438144
+    },
+    {
+      "observed_ns": 1793604256318256000,
+      "cpu_percent_one_core": 97.2,
+      "rss_bytes": 678412288
+    },
+    {
+      "observed_ns": 1793604257323323000,
+      "cpu_percent_one_core": 96.9,
+      "rss_bytes": 678920192
+    },
+    {
+      "observed_ns": 1793604258328381000,
+      "cpu_percent_one_core": 72.0,
+      "rss_bytes": 674643968
+    },
+    {
+      "observed_ns": 1793604259328518000,
+      "cpu_percent_one_core": 87.9,
+      "rss_bytes": 675594240
+    },
+    {
+      "observed_ns": 1793604260338166000,
+      "cpu_percent_one_core": 87.2,
+      "rss_bytes": 675495936
+    },
+    {
+      "observed_ns": 1793604261343237000,
+      "cpu_percent_one_core": 98.5,
+      "rss_bytes": 674578432
+    },
+    {
+      "observed_ns": 1793604262344115000,
+      "cpu_percent_one_core": 80.2,
+      "rss_bytes": 677036032
+    },
+    {
+      "observed_ns": 1793604263347001000,
+      "cpu_percent_one_core": 83.9,
+      "rss_bytes": 677707776
+    },
+    {
+      "observed_ns": 1793604264352057000,
+      "cpu_percent_one_core": 95.7,
+      "rss_bytes": 679280640
+    },
+    {
+      "observed_ns": 1793604265354964000,
+      "cpu_percent_one_core": 99.6,
+      "rss_bytes": 680787968
+    },
+    {
+      "observed_ns": 1793604266355930000,
+      "cpu_percent_one_core": 91.6,
+      "rss_bytes": 682180608
+    },
+    {
+      "observed_ns": 1793604267359214000,
+      "cpu_percent_one_core": 95.8,
+      "rss_bytes": 682524672
+    },
+    {
+      "observed_ns": 1793604268364270000,
+      "cpu_percent_one_core": 98.0,
+      "rss_bytes": 684523520
+    },
+    {
+      "observed_ns": 1793604269369339000,
+      "cpu_percent_one_core": 95.1,
+      "rss_bytes": 685572096
+    },
+    {
+      "observed_ns": 1793604270373759000,
+      "cpu_percent_one_core": 85.7,
+      "rss_bytes": 688930816
+    },
+    {
+      "observed_ns": 1793604271378827000,
+      "cpu_percent_one_core": 89.7,
+      "rss_bytes": 688553984
+    },
+    {
+      "observed_ns": 1793604272383896000,
+      "cpu_percent_one_core": 95.7,
+      "rss_bytes": 691585024
+    },
+    {
+      "observed_ns": 1793604273384791000,
+      "cpu_percent_one_core": 83.6,
+      "rss_bytes": 691765248
+    },
+    {
+      "observed_ns": 1793604274389788000,
+      "cpu_percent_one_core": 86.1,
+      "rss_bytes": 693436416
+    },
+    {
+      "observed_ns": 1793604275394848000,
+      "cpu_percent_one_core": 94.3,
+      "rss_bytes": 692174848
+    },
+    {
+      "observed_ns": 1793604276398842000,
+      "cpu_percent_one_core": 90.3,
+      "rss_bytes": 695369728
+    },
+    {
+      "observed_ns": 1793604277403906000,
+      "cpu_percent_one_core": 98.0,
+      "rss_bytes": 695943168
+    },
+    {
+      "observed_ns": 1793604278408970000,
+      "cpu_percent_one_core": 86.1,
+      "rss_bytes": 696320000
+    },
+    {
+      "observed_ns": 1793604279414038000,
+      "cpu_percent_one_core": 82.2,
+      "rss_bytes": 693682176
+    },
+    {
+      "observed_ns": 1793604280418398000,
+      "cpu_percent_one_core": 85.9,
+      "rss_bytes": 693436416
+    }
+  ],
+  "peak_sample_cpu_percent_one_core": 99.6,
+  "start_subscriptions": 706,
+  "end_subscriptions": 715,
+  "nettop_exit_code": 0
+}

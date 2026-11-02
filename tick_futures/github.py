@@ -11,7 +11,7 @@ import tempfile
 import time
 from urllib.parse import quote
 
-from .archive import SAFE_ASSETS_PER_RELEASE, decode, file_hash, restore, validate_manifest
+from .archive import SAFE_ASSETS_PER_RELEASE, decode, file_hash, restore, restore_dataset, validate_manifest
 from .codec import sha256
 from .runtime import atomic_json
 
@@ -39,18 +39,31 @@ def api(path):
     return json.loads(command(["api", path]))
 
 
-def verify_owner_private(repo):
+def verify_owner_private(repo, *, require_push=True):
     owner = command(["api", "user", "--jq", ".login"]).decode().strip()
     info = api("repos/" + repo)
     if not info["private"] or info["owner"]["login"].lower() != owner.lower() or info["owner"]["type"] != "User":
         raise ValueError("Expected a private repository owned by the authenticated personal account")
-    if not info.get("permissions", {}).get("push"):
+    if require_push and not info.get("permissions", {}).get("push"):
         raise PermissionError("Repository push permission is required")
     return info
 
 
 def release_info(repo, tag):
-    return api(f"repos/{repo}/releases/tags/{quote(tag, safe='')}")
+    try:
+        return api(f"repos/{repo}/releases/tags/{quote(tag, safe='')}")
+    except subprocess.CalledProcessError as exc:
+        if b"404" not in (exc.stderr or b""):
+            raise
+        # An unpublished draft may have no Git tag yet. The by-tag endpoint
+        # then returns 404 even to its owner; list drafts to resume safely.
+        pages=json.loads(command(["api","--paginate","--slurp",f"repos/{repo}/releases?per_page=100"]))
+        matches=[r for page in pages for r in page if r["tag_name"]==tag]
+        if len(matches)==1:
+            return matches[0]
+        if len(matches)>1:
+            raise ValueError("Ambiguous duplicate Release tags")
+        raise
 
 
 def asset_list(repo, release):
@@ -58,9 +71,26 @@ def asset_list(repo, release):
     return [asset for page in pages for asset in page]
 
 
+def create_release(repo,tag,title,body):
+    # Use the create response's immutable ID immediately. Draft visibility in
+    # by-tag/list queries can lag creation, so do not rediscover a new draft.
+    return json.loads(command(["api",f"repos/{repo}/releases","--method","POST",
+        "--raw-field","tag_name="+tag,"--raw-field","name="+title,
+        "--raw-field","body="+body,"--field","draft=true"]))
+
+
 def download(repo, asset, target):
     command(["api", f"repos/{repo}/releases/assets/{asset['id']}",
              "-H", "Accept: application/octet-stream"], output=target)
+
+
+def find_archive_tag(repo,archive_id):
+    pages=json.loads(command(["api","--paginate","--slurp",f"repos/{repo}/releases?per_page=100"]))
+    name=f"complete-{archive_id}.json"
+    matches=[r["tag_name"] for page in pages for r in page if any(a["name"]==name for a in r["assets"])]
+    if len(matches)!=1:
+        raise ValueError("Missing or ambiguous completed parent archive: "+archive_id)
+    return matches[0]
 
 
 def upload(archive, repo, tag, *, authorization=None, fault_after_parts=None):
@@ -73,14 +103,13 @@ def upload(archive, repo, tag, *, authorization=None, fault_after_parts=None):
         if not (auth.get("status") == "approved" and auth.get("private_backup") is True
                 and auth.get("source") == manifest["source"] and auth.get("evidence_url") and auth.get("checked_at")):
             raise PermissionError("Market-data private off-host backup rights are PENDING; no market assets uploaded")
+    parent_tag=find_archive_tag(repo,manifest["parent"]) if manifest.get("parent") else None
     try:
         release = release_info(repo, tag)
     except subprocess.CalledProcessError as exc:
         if b"404" not in (exc.stderr or b""):
             raise
-        command(["release", "create", tag, "--repo", repo, "--draft", "--title", tag,
-                 "--notes", "Immutable archive. Collection integrity is specified separately in its manifest."])
-        release = release_info(repo, tag)
+        release = create_release(repo,tag,tag,"Immutable archive. Collection integrity is specified separately in its manifest.")
     assets = {a["name"]: a for a in asset_list(repo, release)}
     manifest_name = f"manifest-{manifest['archive_id']}.json"
     completion_name = f"complete-{manifest['archive_id']}.json"
@@ -130,48 +159,69 @@ def upload(archive, repo, tag, *, authorization=None, fault_after_parts=None):
                       "manifest_name": manifest_name, "manifest_sha256": file_hash(archive / "manifest.json"),
                       "assets": remote_records, "collection_integrity": manifest["collection_integrity"],
                       "archive_integrity": "all_assets_downloaded_and_decoded_verified"}
+        if parent_tag:
+            completion["parent_tag"]=parent_tag
         local_completion = temp / "receipt.json"
         atomic_json(local_completion, completion)
         ensure_metadata(completion_name, local_completion)  # completion is published LAST
         if release.get("draft"):
             command(["release", "edit", tag, "--repo", repo, "--draft=false"])
     receipt = {**completion, "uploaded_this_attempt": uploaded, "downloaded_decoded_parts": len(remote_records),
-               "release_url": release["html_url"]}
+               "release_url": f"https://github.com/{repo}/releases/tag/{quote(tag,safe='')}"}
     atomic_json(archive / "remote-receipt.json", receipt)
     return receipt
 
 
 def restore_github(repo, tag, output, *, archive_id=None):
-    verify_owner_private(repo)
-    release = release_info(repo, tag)
-    assets = {a["name"]: a for a in asset_list(repo, release)}
-    complete_names = [name for name in assets if name.startswith("complete-") and name.endswith(".json")]
-    if archive_id:
-        complete_names = [name for name in complete_names if name == f"complete-{archive_id}.json"]
-    if len(complete_names) != 1:
-        raise ValueError("Select exactly one completed archive; incomplete/missing batches cannot restore")
+    verify_owner_private(repo,require_push=False)
     with tempfile.TemporaryDirectory(prefix="tick-github-only-") as folder:
         cache = Path(folder)
-        download(repo, assets[complete_names[0]], cache / "completion.json")
-        completion = json.loads((cache / "completion.json").read_text())
-        if completion.get("format") != "tfcomplete-1":
-            raise ValueError("Incompatible completion version")
-        name = completion["manifest_name"]
-        if name not in assets:
-            raise ValueError("Missing remote manifest")
-        download(repo, assets[name], cache / "manifest.json")
-        if file_hash(cache / "manifest.json") != completion["manifest_sha256"]:
-            raise ValueError("Remote manifest hash mismatch")
-        manifest = json.loads((cache / "manifest.json").read_text())
-        names = validate_manifest(manifest)
-        if [p["name"] for p in completion["assets"]] != names:
-            raise ValueError("Completion asset order/set does not match manifest")
-        for name in names:
+        downloaded=0
+        fetched={}
+        def fetch(current_tag,wanted=None):
+            nonlocal downloaded
+            release=release_info(repo,current_tag)
+            assets={a["name"]:a for a in asset_list(repo,release)}
+            complete_names=[n for n in assets if n.startswith("complete-") and n.endswith(".json") and (wanted is None or n==f"complete-{wanted}.json")]
+            if len(complete_names)!=1:
+                raise ValueError("Select exactly one completed archive; incomplete/missing batches cannot restore")
+            target=cache/(wanted or "leaf")
+            target.mkdir()
+            download(repo,assets[complete_names[0]],target/"completion.json")
+            completion=json.loads((target/"completion.json").read_text())
+            if completion.get("format")!="tfcomplete-1":
+                raise ValueError("Incompatible completion version")
+            name=completion["manifest_name"]
             if name not in assets:
-                raise ValueError(f"Missing remote shard: {name}")
-            download(repo, assets[name], cache / name)
-        report = restore(cache, output)
+                raise ValueError("Missing remote manifest")
+            download(repo,assets[name],target/"manifest.json")
+            if file_hash(target/"manifest.json")!=completion["manifest_sha256"]:
+                raise ValueError("Remote manifest hash mismatch")
+            manifest=json.loads((target/"manifest.json").read_text())
+            key=manifest["archive_id"]
+            if key!=completion["archive_id"] or (wanted is not None and key!=wanted):
+                raise ValueError("Wrong remote archive identity")
+            if key in fetched:
+                raise ValueError("Archive parent cycle")
+            fetched[key]=target
+            names=validate_manifest(manifest)
+            if [p["name"] for p in completion["assets"]]!=names:
+                raise ValueError("Completion asset order/set does not match manifest")
+            for name in names:
+                if name not in assets:
+                    raise ValueError("Missing remote shard: "+name)
+                download(repo,assets[name],target/name)
+            downloaded+=len(names)+2
+            parent=manifest.get("parent")
+            if parent:
+                fetch(completion.get("parent_tag") or find_archive_tag(repo,parent),parent)
+            return key
+        leaf=fetch(tag,archive_id)
+        if len(fetched)==1:
+            report=restore(fetched[leaf],output)
+        else:
+            report=restore_dataset(cache,output,leaf=leaf)
         report.update({"remote_restore": True, "repo": repo, "tag": tag,
-                       "downloaded_assets": len(names) + 2, "production_data_or_cache_used": False})
+                       "downloaded_assets": downloaded, "production_data_or_cache_used": False})
         atomic_json(Path(output) / "restore-report.json", report)
         return report

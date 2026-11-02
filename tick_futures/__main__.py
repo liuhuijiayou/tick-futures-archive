@@ -32,6 +32,10 @@ def main(argv=None):
     parser = sub.add_parser("restore")
     parser.add_argument("archive", type=Path)
     parser.add_argument("output", type=Path)
+    parser = sub.add_parser("restore-dataset")
+    parser.add_argument("directory",type=Path)
+    parser.add_argument("output",type=Path)
+    parser.add_argument("--leaf")
     parser = sub.add_parser("upload")
     parser.add_argument("archive", type=Path)
     parser.add_argument("repo")
@@ -98,6 +102,9 @@ def main(argv=None):
         elif args.command == "restore":
             from .archive import restore
             result = restore(args.archive, args.output)
+        elif args.command == "restore-dataset":
+            from .archive import restore_dataset
+            result=restore_dataset(args.directory,args.output,leaf=args.leaf)
         elif args.command == "verify-archive":
             import tempfile
             from .archive import restore

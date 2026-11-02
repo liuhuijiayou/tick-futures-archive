@@ -15,6 +15,8 @@ import signal
 import time
 import uuid
 import subprocess
+import shutil
+import sys
 
 import numpy as np
 import pandas as pd
@@ -49,25 +51,33 @@ def changed_rows(current, committed):
         if a.dtype != b.dtype:
             return current, True
         if a.dtype.hasobject:
-            unequal = np.array([dumps(a[i]) != dumps(b[indices[i]]) for i in shared])
+            def identical(left,right):
+                if type(left) is type(right) and type(left) in (str,int,bool,bytes,type(None)):
+                    return left==right
+                return dumps(left)==dumps(right)
+            unequal = np.array([not identical(a[i],b[indices[i]]) for i in shared])
         else:
             left = np.ascontiguousarray(a[shared]).view(np.uint8).reshape(len(shared), a.dtype.itemsize)
             right = np.ascontiguousarray(b[indices[shared]]).view(np.uint8).reshape(len(shared), b.dtype.itemsize)
             unequal = np.any(left != right, axis=1)
         changed[shared] |= unequal
+    if np.all(changed[shared]):
+        # Reused IDs with no unchanged content anchor may be a day/session
+        # reset, a complete revision, or a replaced source window.
+        return current, True
     return current.loc[changed], False
 
 
 def collect(root, *, symbols=None, data_length=10000, seconds=None, max_contracts=None,
-            min_free_bytes=512 * 1024 * 1024, refresh_seconds=3600):
+            min_free_bytes=512 * 1024 * 1024, refresh_seconds=300,initial_only=False):
     root = Path(root).resolve()
     with InstanceLock(root / "collector.lock"):
         return _collect(root, symbols=symbols, data_length=data_length, seconds=seconds,
                         max_contracts=max_contracts, min_free_bytes=min_free_bytes,
-                        refresh_seconds=refresh_seconds)
+                        refresh_seconds=refresh_seconds,initial_only=initial_only)
 
 
-def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_bytes, refresh_seconds):
+def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_bytes, refresh_seconds,initial_only):
     os.umask(0o077)
     run = uuid.uuid4().hex
     target_start = time.time_ns()
@@ -117,6 +127,40 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
     backfill_requested = set()
     backfill_todo = deque()
     upgrade_frames = {}
+    backfill_child=None
+    backfill_job=None
+    backfill_tokens={}
+    recovery_jobs={}
+    def copy_helper_metadata(job):
+        from .runtime import atomic_bytes
+        for path in (Path(job)/"discovery").glob("*"):
+            if path.name!="universe-latest.json" and path.is_file():
+                destination=root/"discovery"/path.name
+                if not destination.exists():
+                    atomic_bytes(destination,path.read_bytes())
+    for path in (root/"backfill-jobs").glob("*/completed.json") if (root/"backfill-jobs").exists() else []:
+        recovery_jobs[str(path.parent)]=json.loads(path.read_text())
+        copy_helper_metadata(path.parent)
+    def acknowledge(token,result):
+        nonlocal total_written,realtime_written
+        symbol,frame,origin=pending.pop(token)
+        pending_since.pop(token,None)
+        if frame is not None:
+            committed[symbol]=frame
+        total_written+=result["written"]
+        if origin=="realtime_update":
+            realtime_written+=result["written"]
+        if token in backfill_tokens:
+            backfill_requested.discard(symbol)
+            job=backfill_tokens.pop(token)
+            receipt_path=Path(job)/"import-receipt.json"
+            receipt=json.loads(receipt_path.read_text()) if receipt_path.exists() else {"symbols":{}}
+            receipt["symbols"][symbol]=result
+            atomic_json(receipt_path,receipt)
+            with store.db:
+                store.event(symbol,"backfill_import_failed" if "error" in result else "backfill_import_committed",{**result,"job":Path(job).name})
+            if "error" in result:
+                alert(root,"backfill_import_failed",{"symbol":symbol,**result})
     initial_io = process.io_counters() if hasattr(process, "io_counters") else None
     try:
         while not stop and (seconds is None or time.monotonic() - begun < seconds):
@@ -125,6 +169,8 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                 try:
                     api = connect()
                     universe = discover(api, root / "discovery")
+                    if universe.get("calendar_error"):
+                        alert(root,"calendar_unavailable",universe["calendar_error"])
                     refreshed = time.monotonic()
                     all_symbols = universe["symbols"]
                     desired = all_symbols if symbols is None else list(symbols)
@@ -180,13 +226,9 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     token, result = writer.acks.get_nowait()
                 except queue.Empty:
                     break
-                symbol, frame, origin = pending.pop(token)
-                pending_since.pop(token, None)
-                committed[symbol] = frame
-                total_written += result["written"]
-                if origin == "realtime_update":
-                    realtime_written += result["written"]
-                if result["decision"] in ("no_content_overlap", "ambiguous_overlap") and data_length<10000 and symbol not in backfill_requested:
+                symbol,frame,origin=pending[token]
+                acknowledge(token,result)
+                if result.get("decision") in ("no_content_overlap", "ambiguous_overlap") and data_length<10000 and symbol not in backfill_requested:
                     backfill_todo.append(symbol)
             # Create subscriptions from a public API coroutine to avoid the
             # synchronous get_tick_serial initialization starving existing ones.
@@ -203,18 +245,31 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     except Exception as exc:
                         failures[symbol] = {"type": type(exc).__name__, "message": str(exc)}
                 api.create_task(subscribe())
-            if backfill_todo and memory_ok and initializing<4:
-                symbol = backfill_todo.popleft()
-                if symbol not in backfill_requested and symbol in frames:
-                    backfill_requested.add(symbol)
-                    async def upgrade(symbol=symbol):
-                        try:
-                            upgrade_frames[symbol] = api.get_tick_serial(symbol,data_length=10000)
-                        except Exception as exc:
-                            alert(root,"backfill_subscription_failed",{"symbol":symbol,"type":type(exc).__name__,"message":str(exc)})
-                    api.create_task(upgrade())
+            if backfill_child is not None and backfill_child.poll() is not None:
+                completed=backfill_job/"completed.json"
+                if completed.exists():
+                    recovery_jobs[str(backfill_job)]=json.loads(completed.read_text())
+                    copy_helper_metadata(backfill_job)
+                else:
+                    alert(root,"isolated_backfill_failed",{"job":backfill_job.name,"exit_code":backfill_child.returncode})
+                backfill_child=None
+            if backfill_todo and backfill_child is None and not todo and memory_ok and not initial_only and shutil.disk_usage(root).free>20*1024**3:
+                batch=[]
+                while backfill_todo and len(batch)<8:
+                    symbol=backfill_todo.popleft()
+                    if symbol not in backfill_requested and symbol in frames:
+                        batch.append(symbol)
+                        backfill_requested.add(symbol)
+                if batch:
+                    backfill_job=root/"backfill-jobs"/uuid.uuid4().hex
+                    backfill_job.mkdir(parents=True)
+                    backfill_child=subprocess.Popen([sys.executable,"-m","tick_futures.backfill_worker",
+                        "--parent-root",str(root),"--job-root",str(backfill_job),"--symbols",*batch],cwd=Path(__file__).resolve().parents[1],
+                        stdout=subprocess.DEVNULL)  # errors still go to redacted project stderr
+                    with store.db:
+                        store.event(None,"isolated_backfill_started",{"job":backfill_job.name,"symbols":batch,"pid":backfill_child.pid,"account_mode":"TqSim"})
             try:
-                api.wait_update(deadline=time.time() + 0.2)
+                updated=api.wait_update(deadline=time.time() + 0.2)
             except Exception as exc:
                 with store.db:
                     store.event(None, "connection_exception", {"type": type(exc).__name__, "message": str(exc)})
@@ -224,8 +279,7 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     writer.check()
                     try:
                         token, result = writer.acks.get(timeout=0.2)
-                        symbol, frame, origin = pending.pop(token)
-                        total_written += result["written"]
+                        acknowledge(token,result)
                     except queue.Empty:
                         continue
                 api.close()
@@ -244,7 +298,9 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                         store.event(symbol,"backfill_window_expanded",{"rows":10000,"scope":"public recent buffer only"})
             for symbol, frame in list(frames.items()):
                 sub = subscriptions[symbol]
-                if api.is_changing(frame):
+                # SDK is_changing can expose the previous diff when a deadline
+                # returns False. It must be gated by wait_update's result.
+                if updated and api.is_changing(frame):
                     dirty.add(symbol)
                     last_quote[symbol] = time.monotonic()
                 if not api.is_serial_ready(frame):
@@ -261,10 +317,12 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                 selected, full = changed_rows(stable, committed.get(symbol))
                 rows = frame_rows(selected)
                 if not rows:
+                    dirty.discard(symbol)
                     if first:
                         sub["state"] = "ready_empty"
                         with store.db:
                             store.db.execute("UPDATE contracts SET status='subscribed_empty',live_enabled_ns=coalesce(live_enabled_ns,?) WHERE symbol=?",(time.time_ns(),symbol))
+                        committed[symbol]=stable  # no Tick exists in this confirmed empty window
                     continue
                 tail = frame_rows(stable.tail(64))
                 token = uuid.uuid4().hex
@@ -282,8 +340,9 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                 with store.db:
                     store.db.execute("UPDATE contracts SET live_enabled_ns=coalesce(live_enabled_ns,?),status='subscribed' WHERE symbol=?",
                                      (sub["live_enabled_ns"], symbol))
-                    contract_target = store.db.execute("SELECT target_start_ns FROM contracts WHERE symbol=?",(symbol,)).fetchone()[0]
-                    if first and int(rows[0]["datetime"]) > contract_target:
+                    contract_target,existing_earliest = store.db.execute("SELECT target_start_ns,earliest_ns FROM contracts WHERE symbol=?",(symbol,)).fetchone()
+                    covered_earliest=min(int(rows[0]["datetime"]),existing_earliest) if existing_earliest is not None else int(rows[0]["datetime"])
+                    if first and covered_earliest > contract_target:
                         store.gap(symbol,"startup_window_after_target",{"requested_rows":data_length,"maximum_documented_rows":10000},
                                   status="gap_pending_replay" if len(stable)<10000 else "gap_unrecoverable",
                                   start_ns=contract_target,end_ns=int(rows[0]["datetime"]))
@@ -304,6 +363,7 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     "remaining_subscriptions": len(todo), "failures": failures, "written_this_run": total_written,
                     "realtime_written_this_run": realtime_written, "queue": writer.inbox.qsize(), "pending": len(pending),
                     "reconnects": reconnects, "metrics": metrics, "status": "running",
+                    "backfill_helper_pid":backfill_child.pid if backfill_child else None,"backfill_pending_contracts":len(backfill_todo),
                     "coverage_status": "PENDING full day and source replay verification"}
                 atomic_json(root / "heartbeat.json", status)
                 last_heartbeat = time.monotonic()
@@ -326,19 +386,34 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     selected = command.get("symbols") or [s for s, in store.db.execute("SELECT DISTINCT symbol FROM gaps WHERE status='gap_pending_replay' AND symbol IS NOT NULL")]
                     rejected = [s for s in selected if s not in all_symbols]
                     accepted = [s for s in selected if s in all_symbols]
+                    for s in accepted:
+                        backfill_requested.discard(s)
                     backfill_todo.extend(accepted)
                     command.update({"status":"queued" if accepted else "no_pending_contract_gaps","symbols":accepted,"rejected":rejected})
                     atomic_json(request,command)
+                for job,info in list(recovery_jobs.items()):
+                    receipt_path=Path(job)/"import-receipt.json"
+                    receipt=json.loads(receipt_path.read_text()) if receipt_path.exists() else {"symbols":{}}
+                    for symbol in info["symbols"]:
+                        if symbol in receipt["symbols"] or symbol in {v[0] for v in pending.values()} or writer.inbox.full():
+                            continue
+                        token=uuid.uuid4().hex
+                        writer.submit_journal(token,info["journal"],symbol,run,{"metadata_version":info["metadata_version"],"source_journal_sha256":info["journal_sha256"],"job":Path(job).name})
+                        pending[token]=(symbol,None,"recovery_backfill")
+                        pending_since[token]=time.monotonic()
+                        backfill_tokens[token]=job
+                    if all(s in receipt["symbols"] for s in info["symbols"]):
+                        recovery_jobs.pop(job,None)
             metrics["max_receive_loop_seconds"] = max(metrics["max_receive_loop_seconds"], time.monotonic() - loop_started)
             # Refresh on a slow cadence and before day/night preopen. Rebuild only
             # after draining; it is not a health-check restart.
             clock = datetime.now(CST)
-            preopen_key = clock.strftime("%Y%m%d%H") if (clock.hour, clock.minute) in ((8, 40), (20, 30)) else None
+            preopen_key = clock.strftime("%Y%m%d%H%M") if (clock.hour, clock.minute) in ((7,30),(8,40),(19,30),(20,30)) else None
             if time.monotonic() - refreshed > refresh_seconds or (preopen_key and preopen_key != locals().get("last_preopen")):
                 if refresh_task is None:
                     async def refresh():
                         try:
-                            refresh_box["value"] = await refresh_universe(api,root/"discovery")
+                            refresh_box["value"] = await refresh_universe(api,root/"discovery",all_symbols)
                         except Exception as exc:
                             refresh_box["error"] = {"type":type(exc).__name__,"message":str(exc)}
                     refresh_task = api.create_task(refresh())
@@ -350,7 +425,7 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     alert(root,"universe_refresh_failed",refresh_box.pop("error"))
                 elif "value" in refresh_box:
                     fresh, fresh_metadata = refresh_box.pop("value")
-                    meta = {str(r["instrument_id"]):r for r in fresh_metadata}
+                    meta = {**meta,**{str(r["instrument_id"]):r for r in fresh_metadata}}
                     if fresh["symbols"] != all_symbols:
                         with store.db:
                             store.event(None,"universe_changed",{"previous":universe["version"],"new":fresh["version"]})
@@ -361,20 +436,24 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                                     if symbols is None:
                                         todo.append(s)
                             for s in set(all_symbols)-set(fresh["symbols"]):
-                                store.db.execute("UPDATE contracts SET status='expired_or_removed' WHERE symbol=?",(s,))
-                                # Public TqSdk has no unsubscribe-serial method.
-                                # Stop processing expired frames; retained SDK state
-                                # is released on the next genuine connection rebuild.
-                                frames.pop(s,None)
-                        all_symbols = fresh["symbols"]
+                                expired=meta.get(s,{}).get("expired")
+                                confirmed=isinstance(expired,(bool,np.bool_)) and bool(expired)
+                                store.db.execute("UPDATE contracts SET status=? WHERE symbol=?",("expired_confirmed" if confirmed else "vendor_missing_unresolved",s))
+                                store.event(s,"expiry_confirmed" if confirmed else "vendor_list_missing_unresolved",{"metadata_version":fresh["version"],"kept_receiving":not confirmed})
+                                if confirmed:
+                                    frames.pop(s,None)
+                                    subscriptions[s]["state"]="expired_confirmed"
+                        retained=[s for s in all_symbols if s not in fresh["symbols"] and s in frames]
+                        all_symbols = fresh["symbols"]+retained
+                        if symbols is None and not max_contracts:
+                            desired=list(all_symbols)
                     universe = fresh
+            if initial_only and not todo and not pending and len(subscriptions)==len(desired) and all(v["state"] in ("subscribed","ready_empty") for v in subscriptions.values()):
+                break
         writer.close()
         while not writer.acks.empty():
             token, result = writer.acks.get_nowait()
-            symbol, frame, origin = pending.pop(token)
-            total_written += result["written"]
-            if origin == "realtime_update":
-                realtime_written += result["written"]
+            acknowledge(token,result)
         with store.db:
             for symbol, failure in failures.items():
                 store.db.execute("UPDATE contracts SET status='failed',detail=? WHERE symbol=?", (json.dumps(failure), symbol))
@@ -383,6 +462,7 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                   "written": total_written, "realtime_written": realtime_written,
                   "requested": len(subscriptions), "failures": failures, "metrics": metrics,
                   "elapsed_seconds": time.monotonic() - begun, "coverage_status": "PENDING full trading day"}
+        result["initialization_complete"]=not todo and len(subscriptions)==len(desired) and all(v["state"] in ("subscribed","ready_empty") for v in subscriptions.values())
         atomic_json(root / f"run-{run}.json", result)
         atomic_json(root / "heartbeat.json", result)
         return result
@@ -393,6 +473,12 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
         alert(root, "collector_failure", {"type": type(exc).__name__, "message": str(exc)})
         raise
     finally:
+        if backfill_child is not None and backfill_child.poll() is None:
+            backfill_child.terminate()
+            try:
+                backfill_child.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                backfill_child.kill()
         if api:
             api.close()
         if writer.thread.is_alive():

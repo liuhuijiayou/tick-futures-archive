@@ -1,0 +1,37 @@
+{
+  "started_ns": 1793606112424962000,
+  "ended_ns": 1793606163101857000,
+  "clone_exit_code": 0,
+  "restore_exit_code": 0,
+  "independent_root": "/private/tmp/tick-github-only-djrxyt1z",
+  "code_commit": "0e56f48b85394387cbb192eff8f77299a10d0fec",
+  "runtime_report": {
+    "status": "github_only_isolated_recovery_passed",
+    "runtime_tag": "decoder-runtime-v1",
+    "wheel_bytes": 16505168,
+    "wheels_downloaded": 6,
+    "pip_network_or_cache_used": false,
+    "production_directory_or_environment_used": false,
+    "journal_verification": {
+      "status": "sqlite_and_all_record_bytes_types_bits_verified",
+      "rows": 800
+    }
+  },
+  "restore_report": {
+    "archive_id": "2960a3819a244af8953c45297fa18a1e",
+    "status": "all_original_bytes_match",
+    "files": [
+      {
+        "path": "journal/journal.sqlite3",
+        "bytes": 655360,
+        "sha256": "b78ffcd15650918746a7c918cbed31519dd038f5b32e7171e4892d89dbd0aa45"
+      }
+    ],
+    "collection_integrity": "synthetic_fixture_only",
+    "remote_restore": true,
+    "repo": "liuhuijiayou/tick-futures-archive",
+    "tag": "synthetic-interrupted-20261102",
+    "downloaded_assets": 5,
+    "production_data_or_cache_used": false
+  }
+}

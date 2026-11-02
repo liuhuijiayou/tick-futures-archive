@@ -1,0 +1,14 @@
+{
+  "observed_ns": 1793605848584149000,
+  "tag": "synthetic-interrupted-20261102",
+  "draft": true,
+  "assets": [
+    {
+      "name": "part-000000-d15518772ff9dcc1fdcd4691.zstd",
+      "id": 700913058,
+      "size": 26107
+    }
+  ],
+  "completion_present": false,
+  "injected_failure_observed": true
+}

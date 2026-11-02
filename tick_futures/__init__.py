@@ -1,3 +1,3 @@
-"""Domestic futures Tick collection, quality checks, and feature research."""
+"""Read-only futures Tick collection, lossless archival, audit and recovery."""
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"

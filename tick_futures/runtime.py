@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 import tempfile
 import time
+import re
+import sys
 
 
 def atomic_bytes(path, raw):
@@ -30,7 +32,27 @@ def atomic_bytes(path, raw):
 
 
 def atomic_json(path, obj):
-    atomic_bytes(path, (json.dumps(obj, ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode())
+    atomic_bytes(path, (json.dumps(redact_errors(obj), ensure_ascii=False, indent=2, allow_nan=False) + "\n").encode())
+
+
+def redact_errors(value):
+    """Sanitize diagnostic strings; never touch raw data, IDs or content hashes."""
+    secrets={os.environ.get(k) for k in ("TQ_USER","TQ_PASSWORD")}
+    for stream in (sys.stdout,sys.stderr):
+        secrets.update(getattr(stream,"secrets",()))
+    secrets.discard(None)
+    secrets.discard("")
+    def scrub(text):
+        for secret in sorted(secrets,key=len,reverse=True):
+            text=text.replace(secret,"[REDACTED]")
+        return re.sub(r"eyJ[\w-]+\.[\w-]+\.[\w-]+","[REDACTED_TOKEN]",text)
+    if isinstance(value,dict):
+        return {k:scrub(v) if k in ("error","message","close_error","last_error") and isinstance(v,str) else redact_errors(v) for k,v in value.items()}
+    if isinstance(value,list):
+        return [redact_errors(v) for v in value]
+    if isinstance(value,tuple):
+        return tuple(redact_errors(v) for v in value)
+    return value
 
 
 class InstanceLock(AbstractContextManager):

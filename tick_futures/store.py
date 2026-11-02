@@ -6,6 +6,7 @@ observation. IDs are scoped evidence, never a database uniqueness constraint.
 
 from collections import Counter
 import json
+import hashlib
 from pathlib import Path
 import queue
 import shutil
@@ -14,6 +15,7 @@ import threading
 import time
 
 from .codec import dumps, loads, sha256
+from .runtime import redact_errors
 
 DDL = """
 CREATE TABLE IF NOT EXISTS records (
@@ -82,6 +84,7 @@ class Store:
         self.root.mkdir(parents=True, exist_ok=True, mode=0o700)
         self.path = self.root / "hot.sqlite3"
         self.min_free_bytes = min_free_bytes
+        self._verified_journals={}
         self.db = sqlite3.connect(self.path, timeout=30)
         self.db.execute("PRAGMA journal_mode=WAL")
         self.db.execute("PRAGMA synchronous=FULL")
@@ -96,11 +99,11 @@ class Store:
 
     def event(self, symbol, kind, detail):
         self.db.execute("INSERT INTO events(received_ns,symbol,kind,detail) VALUES(?,?,?,?)",
-                        (time.time_ns(), symbol, kind, json.dumps(detail, ensure_ascii=False)))
+                        (time.time_ns(), symbol, kind, json.dumps(redact_errors(detail), ensure_ascii=False)))
 
     def gap(self, symbol, kind, detail, *, status="evidence_insufficient", start_ns=None, end_ns=None):
         cur=self.db.execute("INSERT INTO gaps(symbol,detected_ns,kind,status,start_ns,end_ns,detail) VALUES(?,?,?,?,?,?,?)",
-                        (symbol, time.time_ns(), kind, status, start_ns, end_ns, json.dumps(detail)))
+                        (symbol, time.time_ns(), kind, status, start_ns, end_ns, json.dumps(redact_errors(detail))))
         self.event(symbol,"gap_created",{"gap_id":cur.lastrowid,"kind":kind,"status":status,
                    "start_ns":start_ns,"end_ns":end_ns,"detail":detail})
         return cur.lastrowid
@@ -110,7 +113,7 @@ class Store:
         return (item[0], loads(item[1])) if item else (0, [])
 
     def ingest(self, symbol, rows, run, origin, *, received_ns=None, full_window=True, tail=None,
-               window_info=None):
+               window_info=None, update_checkpoint=True):
         if not rows and tail is None:
             return {"written": 0}
         if shutil.disk_usage(self.root).free < self.min_free_bytes:
@@ -123,10 +126,21 @@ class Store:
         current_tail = (tail if tail is not None else rows[-64:])
         if full_window:
             known = None
-            if old_tail and rows:
+            if (old_tail or not update_checkpoint) and rows:
                 lo, hi = min(int(r["id"]) for r in rows), max(int(r["id"]) for r in rows)
-                known = [r[0] for r in self.db.execute("SELECT fingerprint FROM records WHERE symbol=? AND sdk_id BETWEEN ? AND ?", (symbol, lo, hi))]
-            selected, detail = overlap_plan(old_tail, rows, known)
+                time_lo,time_hi=min(int(r["datetime"]) for r in rows),max(int(r["datetime"]) for r in rows)
+                known = [r[0] for r in self.db.execute("SELECT fingerprint FROM records WHERE symbol=? AND sdk_id BETWEEN ? AND ? AND event_ns BETWEEN ? AND ?", (symbol, lo, hi,time_lo,time_hi))]
+            if not update_checkpoint:
+                remaining=Counter(known or [])
+                selected=[]
+                for row,fp in zip(rows,fingerprints(rows)):
+                    if remaining[fp]:
+                        remaining[fp]-=1
+                    else:
+                        selected.append(row)
+                detail={"decision":"historical_content_replay_checked","replayed":len(rows)-len(selected)}
+            else:
+                selected, detail = overlap_plan(old_tail, rows, known)
         else:
             detail = {"decision": "committed_window_diff", "replayed": 0}
             selected = rows
@@ -137,7 +151,7 @@ class Store:
         detail.update({"input_rows": input_count, "window": window_info or {}, "origin": origin})
         last_seq = previous_seq
         first_written_seq=None
-        previous = old_tail[-1] if old_tail else None
+        previous = old_tail[-1] if old_tail and update_checkpoint else None
         with self.db:
             if detail.get("gap"):
                 first = current_tail[0] if current_tail else None
@@ -177,12 +191,13 @@ class Store:
                 self.event(symbol, "same_source_window_reconciled", {"previous_checkpoint_seq": previous_seq,
                            "new_checkpoint_seq": last_seq, "anchor_fingerprint": detail["anchor_fingerprint"],
                            "scope": "returned SDK window only; upstream completeness not proven"})
-            self.db.execute("INSERT INTO checkpoints VALUES(?,?,?,?) ON CONFLICT(symbol) DO UPDATE SET seq=excluded.seq,tail=excluded.tail,updated_ns=excluded.updated_ns",
-                            (symbol, last_seq, dumps(current_tail), received_ns))
+            if update_checkpoint:
+                self.db.execute("INSERT INTO checkpoints VALUES(?,?,?,?) ON CONFLICT(symbol) DO UPDATE SET seq=excluded.seq,tail=excluded.tail,updated_ns=excluded.updated_ns",
+                                (symbol, last_seq, dumps(current_tail), received_ns))
             self.db.execute("UPDATE contracts SET earliest_ns=CASE WHEN earliest_ns IS NULL THEN ? ELSE min(earliest_ns,?) END,status='subscribed' WHERE symbol=?",
                             (min((int(r["datetime"]) for r in rows), default=received_ns),
                              min((int(r["datetime"]) for r in rows), default=received_ns), symbol))
-            if full_window and (window_info or {}).get("configured_rows",0)>=10000 and detail["decision"]=="content_overlap":
+            if full_window and (window_info or {}).get("configured_rows",0)>=10000 and (window_info or {}).get("source_journal_gap_count",0)==0 and (detail["decision"]=="content_overlap" or (detail["decision"]=="historical_content_replay_checked" and detail["replayed"]>0)):
                 for gap_id,kind,start,end,gap_detail in self.db.execute("SELECT seq,kind,start_ns,end_ns,detail FROM gaps WHERE symbol=? AND status='gap_pending_replay'",(symbol,)).fetchall():
                     if kind not in ("startup_window_after_target","window_exceeded") or start is None or end is None:
                         continue
@@ -197,6 +212,37 @@ class Store:
                                "first_ns":full_first_ns,"last_ns":full_last_ns,"scope":"returned SDK window; upstream unknown"})
                     self.db.execute("UPDATE gaps SET status='window_verified' WHERE seq=?",(gap_id,))
         return {"written": len(rows), "seq": last_seq, "decision": detail["decision"]}
+
+    def ingest_journal(self,path,symbol,run,info):
+        """Cold helper output is reconciled by the single durable writer.
+
+        Historical arrival can never roll the live checkpoint back or forward.
+        """
+        path=Path(path).resolve()
+        stat=path.stat()
+        expected=info.get("source_journal_sha256")
+        identity=(stat.st_size,stat.st_mtime_ns)
+        if expected and self._verified_journals.get(str(path))!=(identity,expected):
+            with path.open("rb") as stream:
+                actual=hashlib.file_digest(stream,"sha256").hexdigest()
+            if actual!=expected:
+                raise ValueError("Backfill journal file hash mismatch")
+            self._verified_journals[str(path)]=(identity,expected)
+        source=sqlite3.connect(f"file:{path}?mode=ro",uri=True)
+        try:
+            rows=[]
+            observed=None
+            for fingerprint,raw,received in source.execute("SELECT fingerprint,raw,received_ns FROM records WHERE symbol=? ORDER BY seq",(symbol,)):
+                if sha256(raw)!=fingerprint or dumps(loads(raw))!=raw:
+                    raise ValueError("Backfill journal raw hash/type/bit mismatch")
+                rows.append(loads(raw))
+                observed=received
+            gaps=source.execute("SELECT count(*) FROM gaps WHERE (symbol=? OR symbol IS NULL) AND status!='window_verified'",(symbol,)).fetchone()[0]
+            source_runs=[{"run":r,"detail":json.loads(d)} for r,d in source.execute("SELECT run,detail FROM runs")]
+            return self.ingest(symbol,rows,run,"recovery_backfill",received_ns=observed,
+                full_window=True,update_checkpoint=False,window_info={**info,"configured_rows":10000,"source_journal_gap_count":gaps,"source_runs":source_runs})
+        finally:
+            source.close()
 
 
 def audit_pair(previous, row):
@@ -240,8 +286,14 @@ class DurableWriter:
                 if message is None:
                     self.inbox.task_done()
                     break
-                token, args, kwargs = message
-                result = store.ingest(*args, **kwargs)
+                token, operation, args, kwargs = message
+                if operation=="journal":
+                    try:
+                        result=store.ingest_journal(*args,**kwargs)
+                    except (ValueError,sqlite3.DatabaseError) as exc:
+                        result={"written":0,"error_type":type(exc).__name__,"error":str(exc)}
+                else:
+                    result = store.ingest(*args, **kwargs)
                 self.acks.put((token, result))
                 self.inbox.task_done()
         except BaseException as exc:
@@ -252,7 +304,11 @@ class DurableWriter:
 
     def submit(self, token, *args, **kwargs):
         self.check()
-        self.inbox.put_nowait((token, args, kwargs))
+        self.inbox.put_nowait((token, "ingest", args, kwargs))
+
+    def submit_journal(self,token,path,symbol,run,info):
+        self.check()
+        self.inbox.put_nowait((token,"journal",(path,symbol,run,info),{}))
 
     def check(self):
         if self.error:

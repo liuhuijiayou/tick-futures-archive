@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from tick_futures.archive import create, decode, encode, restore, seal
+from tick_futures.archive import create, decode, encode, restore, restore_dataset, seal
 from tick_futures.audit import verify_db
 from tick_futures.github import upload
 from tick_futures.runtime import atomic_json
@@ -13,6 +13,12 @@ from test_collection import row
 
 
 class Archive(unittest.TestCase):
+    def test_unpublished_release_is_resumed_even_without_git_tag(self):
+        import subprocess
+        from tick_futures.github import release_info
+        error=subprocess.CalledProcessError(1,["gh"],stderr=b"HTTP 404")
+        with patch("tick_futures.github.api",side_effect=error),patch("tick_futures.github.command",return_value=json.dumps([[{"tag_name":"draft","id":7,"draft":True}]]).encode()):
+            self.assertEqual(release_info("owner/repo","draft")["id"],7)
     def test_all_standard_codecs_strict_original_bytes(self):
         raw = b"id,datetime,p\r\n1,1793600000000000001,-0.0\r\n2,2,NaN\n" + bytes(range(256))
         for codec, level in (("gzip", 9), ("zstd", 3), ("zstd", 9), ("zstd", 19), ("xz", 6), ("xz", 9), ("parquet-zstd", 9)):
@@ -65,6 +71,12 @@ class Archive(unittest.TestCase):
             self.assertEqual((second["scope"]["first_seq"], second["scope"]["last_seq"]), (3,3))
             restore(root/"archive2", root/"out")
             self.assertEqual(verify_db(root/"out/journal/journal.sqlite3")["rows"], 1)
+            combined=restore_dataset(root,root/"combined",leaf=second["archive_id"])
+            self.assertEqual(combined["rows"],3)
+            self.assertEqual(combined["archive_order"],[first["archive_id"],second["archive_id"]])
+            (root/"archive1/manifest.json").rename(root/"archive1/missing-manifest.json")
+            with self.assertRaisesRegex(ValueError,"Missing parent"):
+                restore_dataset(root,root/"missing-parent",leaf=second["archive_id"])
             db.close()
 
     def test_market_upload_without_rights_stops_before_release_mutation(self):

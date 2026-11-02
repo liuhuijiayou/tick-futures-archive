@@ -145,6 +145,8 @@ def validate_manifest(manifest):
         raise ValueError("Incompatible archive/schema version")
     if manifest.get("dictionary") is not None:
         raise ValueError("Unexpected/missing dictionary; this decoder uses independent dictionary-free shards")
+    if manifest.get("record_schema",{}).get("format")!="tfrec-1":
+        raise ValueError("Incompatible embedded record schema")
     paths, names = [], []
     for entry in manifest["files"]:
         safe_relative(entry["path"])
@@ -165,6 +167,64 @@ def validate_manifest(manifest):
     if manifest["part_order"] != names:
         raise ValueError("Missing shard or wrong manifest shard order")
     return names
+
+
+def parent_chain(manifests,leaf):
+    chain=[]
+    seen=set()
+    current=leaf
+    while current is not None:
+        if current in seen:
+            raise ValueError("Archive parent cycle")
+        if current not in manifests:
+            raise ValueError("Missing parent archive: "+current)
+        seen.add(current)
+        manifest=manifests[current]
+        validate_manifest(manifest)
+        safe_relative(current)
+        chain.append(manifest)
+        current=manifest.get("parent")
+    chain.reverse()
+    for previous,current in zip(chain,chain[1:]):
+        before,after=previous.get("scope",{}),current.get("scope",{})
+        if not isinstance(before.get("last_seq"),int) or not isinstance(after.get("first_seq"),int) or after["first_seq"]!=before["last_seq"]+1:
+            raise ValueError("Missing or overlapping arrival-sequence range in parent chain")
+    return chain
+
+
+def restore_dataset(directory,output,*,leaf=None):
+    directory,output=Path(directory),Path(output)
+    paths=list(directory.glob("*/manifest.json"))
+    if (directory/"manifest.json").exists():
+        paths.append(directory/"manifest.json")
+    manifests={}
+    locations={}
+    for path in paths:
+        manifest=json.loads(path.read_text())
+        key=manifest["archive_id"]
+        if key in manifests and manifests[key]!=manifest:
+            raise ValueError("Conflicting immutable archive ID")
+        manifests[key]=manifest
+        locations[key]=path.parent
+    if leaf is None:
+        leaves=set(manifests)-{m["parent"] for m in manifests.values() if m.get("parent")}
+        if len(leaves)!=1:
+            raise ValueError("Select a leaf archive; no unique complete dataset chain")
+        leaf=leaves.pop()
+    chain=parent_chain(manifests,leaf)
+    if output.is_symlink() or (output.exists() and any(output.iterdir())):
+        raise FileExistsError("Dataset recovery requires an empty real destination")
+    output=output.resolve()
+    output.mkdir(parents=True,exist_ok=True)
+    reports=[]
+    for manifest in chain:
+        key=manifest["archive_id"]
+        reports.append(restore(locations[key],output/"archives"/key))
+    report={"status":"all_parent_archives_and_original_bytes_verified","archive_order":[m["archive_id"] for m in chain],
+            "rows":sum(m.get("scope",{}).get("rows",0) for m in chain),"archives":reports,
+            "collection_integrity":[m["collection_integrity"] for m in chain],"remote_restore":False}
+    atomic_json(output/"dataset-restore-report.json",report)
+    return report
 
 
 def restore(archive, output):
@@ -215,7 +275,7 @@ def restore(archive, output):
     return report
 
 
-def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES):
+def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES,data_kind="market"):
     """Export a consistent incremental SQLite journal; never modify hot records.
 
     The DB contains canonical typed raw BLOBs, original global arrival seq, receive
@@ -240,28 +300,39 @@ def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES):
         while rows := cursor.fetchmany(2000):
             target.executemany("INSERT INTO records VALUES(?,?,?,?,?,?,?,?,?)", rows)
             target.commit()
+        watermarks={}
         for table in ("checkpoints", "observations", "events", "gaps", "runs", "contracts"):
-            cursor = source.execute(f"SELECT * FROM {table}")
+            if table in ("observations","events","gaps"):
+                watermarks[table]=source.execute(f"SELECT coalesce(max(seq),0) FROM {table}").fetchone()[0]
+                cursor=source.execute(f"SELECT * FROM {table} WHERE seq>?",(index.get("watermarks",{}).get(table,0),))
+            else:
+                cursor = source.execute(f"SELECT * FROM {table}")
             columns = len(cursor.description)
             while rows := cursor.fetchmany(2000):
                 target.executemany(f"INSERT INTO {table} VALUES({','.join('?' for _ in range(columns))})", rows)
         counts = target.execute("SELECT symbol,count(*),min(event_ns),max(event_ns) FROM records GROUP BY symbol").fetchall()
-        gap_counts = dict(target.execute("SELECT status,count(*) FROM gaps GROUP BY status").fetchall())
+        gap_counts = dict(source.execute("SELECT status,count(*) FROM gaps GROUP BY status").fetchall())
         target.commit()
         target.close()
         source.close()
         files = {"journal/journal.sqlite3": snapshot}
+        metadata_files=dict(index.get("metadata_files",{}))
         for path in (root / "discovery").glob("*"):
             if path.is_file():
-                files["discovery/" + path.name] = path
+                digest=file_hash(path)
+                if metadata_files.get(path.name)!=digest:
+                    files["discovery/" + path.name] = path
+                    metadata_files[path.name]=digest
         scope = {"first_seq": index["last_seq"] + 1, "last_seq": high,
                  "rows": sum(c[1] for c in counts), "contracts": [{"symbol": s, "rows": n, "first_ns": a, "last_ns": b} for s,n,a,b in counts],
                  "gaps": gap_counts, "collection_integrity": "evidence_insufficient",
                  "source_semantics": "TqSdk snapshots; no exchange upstream completeness claim"}
-        result = create(files, destination, level=level, shard_bytes=shard_bytes, scope=scope,
+        result = create(files, destination, level=level, shard_bytes=shard_bytes, scope=scope,data_kind=data_kind,
                         parent=index["archives"][-1]["archive_id"] if index["archives"] else None)
         # Keep staging as a local independent raw copy. Cleanup is never automatic.
         index["last_seq"] = high
+        index["watermarks"]=watermarks
+        index["metadata_files"]=metadata_files
         index["archives"].append({"archive_id": result["archive_id"], "path": str(destination.resolve()),
                                   "first_seq": scope["first_seq"], "last_seq": high, "raw_staging": str(staging)})
         atomic_json(index_path, index)

@@ -101,6 +101,35 @@ class Collection(unittest.TestCase):
             reader.close()
             writer.close()
 
+    def test_historical_helper_never_moves_live_checkpoint_and_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            live=Store(root/"live",min_free_bytes=0)
+            live.ingest("TEST.x",[row(i) for i in range(10,13)],"live","initial_backfill")
+            before=live.checkpoint("TEST.x")
+            helper=Store(root/"helper",min_free_bytes=0)
+            helper.ingest("TEST.x",[row(i) for i in range(1,13)],"helper","initial_backfill")
+            helper.close()
+            result=live.ingest_journal(root/"helper/hot.sqlite3","TEST.x","live",{})
+            self.assertEqual(result["written"],9)
+            self.assertEqual(live.checkpoint("TEST.x")[0],before[0])
+            self.assertEqual(dumps(live.checkpoint("TEST.x")[1]),dumps(before[1]))
+            self.assertEqual(live.ingest_journal(root/"helper/hot.sqlite3","TEST.x","live",{})["written"],0)
+            live.close()
+
+    def test_corrupt_helper_ack_does_not_stop_the_live_writer(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            (root/"bad.sqlite3").write_bytes(b"half written SQLite")
+            writer=DurableWriter(root/"live",min_free_bytes=0)
+            writer.submit_journal("bad",root/"bad.sqlite3","TEST.x","live",{})
+            token,result=writer.acks.get(timeout=10)
+            self.assertEqual(token,"bad")
+            self.assertIn("error",result)
+            writer.submit("good","TEST.x",[row(1)],"live","live_update")
+            self.assertEqual(writer.acks.get(timeout=10)[1]["written"],1)
+            writer.close()
+
     def test_injected_disconnect_reconnect_replays_available_window(self):
         import asyncio
         import time
@@ -139,6 +168,39 @@ class Collection(unittest.TestCase):
             self.assertEqual(db.execute("SELECT count(*) FROM events WHERE kind='same_source_window_reconciled'").fetchone()[0],1)
             db.close()
 
+    def test_false_update_does_not_rescan_stale_sdk_diff_and_coalesced_ticks_persist(self):
+        import asyncio,time
+        from tick_futures.collector import collect,changed_rows as compare
+        from tick_futures.runtime import atomic_bytes
+        symbol="SHFE.fixture2612"
+        class Api:
+            calls=0
+            frame=pd.DataFrame([row(1),row(2)])
+            def create_task(self,coro): asyncio.run(coro)
+            def get_tick_serial(self,*a,**kw): return self.frame
+            def is_serial_ready(self,frame): return True
+            def is_changing(self,frame): return True  # cached prior diff, even after timeout
+            def close(self): pass
+            def wait_update(self,**kw):
+                self.calls+=1
+                time.sleep(.005)
+                if self.calls==2:
+                    self.frame.loc[2]=row(3)
+                    self.frame.loc[3]=row(4)
+                return self.calls<=2
+        api=Api()
+        def discover(api,path):
+            path.mkdir(parents=True,exist_ok=True)
+            atomic_bytes(path/"metadata.tfrec",dumps([{"instrument_id":symbol,"trading_time_day":[],"trading_time_night":[]}]))
+            return {"version":"fixture","symbols":[symbol],"metadata_file":"metadata.tfrec"}
+        with tempfile.TemporaryDirectory() as folder,patch("tick_futures.collector.connect",return_value=api),patch("tick_futures.collector.discover",side_effect=discover),patch("tick_futures.collector.changed_rows",wraps=compare) as comparisons:
+            collect(folder,seconds=.3,min_free_bytes=0)
+            db=sqlite3.connect(Path(folder)/"hot.sqlite3")
+            self.assertEqual(db.execute("SELECT count(*) FROM records").fetchone()[0],4)
+            self.assertLessEqual(comparisons.call_count,3)
+            self.assertGreater(api.calls,5)
+            db.close()
+
     def test_window_exceeded_and_id_reset_are_not_silently_deduplicated(self):
         with tempfile.TemporaryDirectory() as folder:
             db = Store(folder, min_free_bytes=0)
@@ -159,8 +221,10 @@ class Collection(unittest.TestCase):
                 db.ingest("TEST.x", [row(2)], "r", "live")
             self.assertEqual(db.checkpoint("TEST.x")[0], before)
             db.min_free_bytes = 0
-            with self.assertRaises(KeyError):
-                db.ingest("TEST.x", [row(2), {"bad": 1}], "r", "live", full_window=False)
+            db.db.execute("CREATE TRIGGER fail_second BEFORE INSERT ON records WHEN NEW.sdk_id=3 BEGIN SELECT RAISE(ABORT,'injected mid-transaction disk/SQL error'); END")
+            db.db.commit()
+            with self.assertRaises(sqlite3.IntegrityError):
+                db.ingest("TEST.x", [row(2), row(3)], "r", "live", full_window=False)
             self.assertEqual(db.checkpoint("TEST.x")[0], before)
             self.assertEqual(db.db.execute("SELECT count(*) FROM records").fetchone()[0], 1)
             db.close()
@@ -199,6 +263,8 @@ class Collection(unittest.TestCase):
         self.assertEqual(list(selected["id"]), [1])
         reset = pd.DataFrame([row(9), row(10)])
         self.assertTrue(changed_rows(reset, old)[1])
+        reused=pd.DataFrame([row(i,2_000_000_000+i) for i in range(1,4)])
+        self.assertTrue(changed_rows(reused,old)[1])
 
     def test_probe_drains_during_subscription_initialization_and_immediately(self):
         with tempfile.TemporaryDirectory() as folder:

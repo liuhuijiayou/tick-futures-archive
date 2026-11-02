@@ -28,7 +28,7 @@ def definition(role, root):
               "EnvironmentVariables":{"PATH":"/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin","PYTHONUNBUFFERED":"1"}}
     if role == "collector":
         result.update({"KeepAlive":True,"ThrottleInterval":30,"ExitTimeOut":45,
-                       "StartCalendarInterval":[{"Hour":8,"Minute":40},{"Hour":20,"Minute":30}]})
+                       "StartCalendarInterval":[{"Hour":7,"Minute":30},{"Hour":19,"Minute":30}]})
     else:
         result.update({"StartInterval":300,"Nice":15})
     return result
@@ -57,9 +57,13 @@ def manage(action, root, auth_config=None):
         load_auth()  # AST only, never executes config.
         root.mkdir(parents=True,exist_ok=True,mode=0o700)
         (root/"logs").mkdir(exist_ok=True,mode=0o700)
-        atomic_json(config_path(root), {"auth_config":str(auth_config),"data_length":10000,
+        settings={"auth_config":str(auth_config),"data_length":1000,
                     "min_free_gib":5,"archive_level":9,"github_repo":"liuhuijiayou/tick-futures-archive",
-                    "backup_rights_status":"PENDING","installed_ns":time.time_ns()})
+                    "backup_rights_status":"PENDING","installed_ns":time.time_ns()}
+        if config_path(root).exists():
+            settings.update(json.loads(config_path(root).read_text()))
+        settings["auth_config"]=str(auth_config)
+        atomic_json(config_path(root),settings)
         agents.mkdir(parents=True,exist_ok=True)
         for role in ("collector","maintenance"):
             atomic_bytes(agents/(LABEL+"."+role+".plist"),plistlib.dumps(definition(role,root)))

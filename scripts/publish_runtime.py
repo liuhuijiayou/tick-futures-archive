@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 
 from tick_futures.archive import file_hash
-from tick_futures.github import api, asset_list, command, download, release_info, verify_owner_private
+from tick_futures.github import api, asset_list, command, create_release, download, release_info, verify_owner_private
 from tick_futures.runtime import atomic_json
 
 
@@ -26,9 +26,8 @@ def main():
     except subprocess.CalledProcessError as exc:
         if b"404" not in (exc.stderr or b""):
             raise
-        command(["release","create",lock["tag"],"--repo",a.repo,"--draft","--title","Offline decoder runtime",
-                 "--notes","Public-package wheels and hashes for isolated recovery; no market data or credentials."])
-        release=release_info(a.repo,lock["tag"])
+        release=create_release(a.repo,lock["tag"],"Offline decoder runtime",
+                 "Public-package wheels and hashes for isolated recovery; no market data or credentials.")
     assets={x["name"]:x for x in asset_list(a.repo,release)}
     verified=[]
     with tempfile.TemporaryDirectory(prefix="decoder-verify-") as folder:
@@ -54,7 +53,7 @@ def main():
             raise ValueError("Remote runtime manifest conflict")
     if release["draft"]:
         command(["release","edit",lock["tag"],"--repo",a.repo,"--draft=false"])
-    report={"status":"all_runtime_assets_redownloaded_sha256_verified","release":release["html_url"],
+    report={"status":"all_runtime_assets_redownloaded_sha256_verified","release":f"https://github.com/{a.repo}/releases/tag/{lock['tag']}",
             "assets":verified,"total_asset_bytes":sum(w["bytes"] for w in verified)+lock_path.stat().st_size,
             "market_data_assets":0}
     atomic_json(a.report,report)

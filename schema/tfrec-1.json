@@ -17,6 +17,7 @@
   "unsupported_types": "fail closed, never stringify, round, drop, or coerce",
   "timestamp_rule": "integer nanoseconds are serialized as integers/NumPy int scalars without floating point conversion",
   "receive_time": "application observation time of stable SDK window, not original per-tick wire arrival time",
+  "arrival_order": "seq preserves local stable-window observation/commit order; original wire interleaving inside SDK-coalesced cross-contract notifications is not exposed and is not claimed",
   "replay": "only exact same-source content overlap is suppressed; observations record the decision; all revisions/reset ambiguity retained",
   "compression": "independently decodable checksum-enabled Zstandard frames; no dictionary; originals hashed before compression"
 }

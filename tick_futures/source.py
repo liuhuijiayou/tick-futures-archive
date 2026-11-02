@@ -1,13 +1,13 @@
 """Only the previously verified public TqSdk path; explicitly local TqSim."""
 
 from collections import Counter
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import importlib.metadata
 import sys
 import time
 
 from .codec import frame_rows, dumps, pack, sha256
-from .common import RedactedStream, load_auth, timestamp
+from .common import CST, RedactedStream, load_auth, timestamp
 from .runtime import atomic_bytes, atomic_json
 
 EXCHANGES = ("SHFE", "INE", "DCE", "CZCE", "CFFEX", "GFEX")
@@ -69,9 +69,9 @@ def discover(api, output, *, calendar=True):
     atomic_json(output / "universe-latest.json", info)
     if calendar:
         try:
-            today = date.today()
+            today = datetime.now(CST).date()
             # The installed SDK calendar has an explicit last supported year.
-            cal = api.get_trading_calendar(today - timedelta(days=40), min(today + timedelta(days=60), date(today.year, 12, 31)))
+            cal = api.get_trading_calendar(date(2003,1,1), min(today + timedelta(days=60), date(today.year, 12, 31)))
             # Calendar dates are strings; this isn't an integer timestamp conversion.
             rows = [{"date": str(row.date)[:10], "trading": bool(row.trading)} for row in cal.itertuples()]
             atomic_json(output / f"calendar-{version}.json", {"version": version,
@@ -83,17 +83,22 @@ def discover(api, output, *, calendar=True):
     return info
 
 
-async def refresh_universe(api, output):
+async def refresh_universe(api, output,previous_symbols=()):
     """Public awaitable metadata queries keep wait_update driving subscriptions."""
     from pathlib import Path
     output = Path(output)
     begin = time.monotonic()
-    symbols = list(await api.query_quotes(ins_class="FUTURE", expired=False, exchange_id=list(EXCHANGES)))
+    result=api.query_quotes(ins_class="FUTURE", expired=False, exchange_id=list(EXCHANGES))
+    await result
+    symbols=list(result)
     metadata, failures = [], []
-    for offset in range(0, len(symbols), 100):
-        batch = symbols[offset:offset+100]
+    previous_missing=[s for s in previous_symbols if s not in symbols]
+    metadata_targets=symbols+previous_missing
+    for offset in range(0, len(metadata_targets), 100):
+        batch = metadata_targets[offset:offset+100]
         try:
-            data = await api.query_symbol_info(batch)
+            data = api.query_symbol_info(batch)
+            await data
             cols = [(str(k),data[k].to_numpy(copy=True)) for k in data.columns]
             metadata.extend({k:v[i] for k,v in cols} for i in range(len(data)))
         except Exception as exc:
@@ -106,6 +111,7 @@ async def refresh_universe(api, output):
             "symbols":symbols,"count":len(symbols),"exchange_counts":dict(Counter(s.split(".")[0] for s in symbols)),
             "metadata_file":f"metadata-{version}.tfrec","metadata_sha256":sha256(raw),
             "metadata_failures":failures,"exchange_crosscheck":"PENDING","elapsed_seconds":time.monotonic()-begin}
+    info["previous_symbols_missing_from_vendor_list"]=previous_missing
     atomic_bytes(output/info["metadata_file"],raw)
     atomic_json(output/f"universe-{version}.json",info)
     atomic_json(output/"universe-latest.json",info)

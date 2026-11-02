@@ -39,6 +39,7 @@ def verify_db(path):
 def coverage(root, output=None, *, scan_values=False):
     root = Path(root)
     db = sqlite3.connect(f"file:{root / 'hot.sqlite3'}?mode=ro", uri=True)
+    db.execute("BEGIN")
     contracts = {r[0]: {"symbol": r[0], "metadata_version": r[1], "target_start_ns": r[2],
                           "actual_earliest_ns": r[3], "live_enabled_ns": r[4], "subscription_status": r[5],
                           "boundary": json.loads(r[6])} for r in db.execute("SELECT * FROM contracts")}
@@ -92,6 +93,14 @@ def coverage(root, output=None, *, scan_values=False):
                 "first_event_ns": None, "last_event_ns": None, "collection_status": "evidence_insufficient"}
     gaps = [{"id": r[0], "symbol": r[1], "detected_ns": r[2], "kind": r[3], "status": r[4],
              "start_ns": r[5], "end_ns": r[6], "detail": json.loads(r[7])} for r in db.execute("SELECT * FROM gaps")]
+    for symbol,contract in contracts.items():
+        first=contract["actual_earliest_ns"]
+        target=contract["target_start_ns"]
+        if first is not None and first>target and not any(g["symbol"]==symbol and g["kind"] in ("startup_window_after_target","startup_prefix_unverified") for g in gaps):
+            gaps.append({"id":"audit:"+symbol,"symbol":symbol,"kind":"startup_prefix_unverified",
+                         "status":"gap_pending_replay","start_ns":target,"end_ns":first,
+                         "detail":{"evidence":"local earliest follows requested start; wider source replay needed",
+                                   "missing_tick_count":"unknown; legitimate quiet is not excluded"}})
     pair_flags = Counter()
     for detail, in db.execute("SELECT detail FROM events WHERE kind='quality'"):
         pair_flags.update(json.loads(detail)["flags"])
