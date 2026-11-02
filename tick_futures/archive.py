@@ -344,7 +344,11 @@ def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES,data_kind
         target.commit()
         target.close()
         source.close()
-        files = {"journal/journal.sqlite3": snapshot,**original_sources}
+        from .audit import audit_journal_values
+        values=audit_journal_values(snapshot)
+        quality=staging/"record-values.json"
+        atomic_json(quality,values)
+        files = {"journal/journal.sqlite3": snapshot,"quality/record-values.json":quality,**original_sources}
         metadata_files=dict(index.get("metadata_files",{}))
         for path in (root / "discovery").glob("*"):
             if path.is_file():
@@ -356,6 +360,7 @@ def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES,data_kind
                  "rows": sum(c[1] for c in counts), "contracts": [{"symbol": s, "rows": n, "first_ns": a, "last_ns": b} for s,n,a,b in counts],
                  "gaps": gap_counts, "collection_integrity": "evidence_insufficient",
                  "original_source_journals_added":len(original_sources)//2,
+                 "value_audit":{"rows":values["rows"],"raw_hash_type_bit_roundtrip":values["raw_hash_type_bit_roundtrip"]},
                  "source_semantics": "TqSdk snapshots; no exchange upstream completeness claim"}
         result = create(files, destination, level=level, shard_bytes=shard_bytes, scope=scope,data_kind=data_kind,
                         parent=index["archives"][-1]["archive_id"] if index["archives"] else None)

@@ -49,6 +49,29 @@ def value_flags(row):
     return flags
 
 
+def audit_journal_values(path):
+    """Incremental cold-journal audit, run before publishing its manifest."""
+    db=sqlite3.connect(f"file:{Path(path).resolve()}?mode=ro",uri=True)
+    flags=Counter()
+    rows=0
+    first=last=None
+    try:
+        for seq,fingerprint,raw in db.execute("SELECT seq,fingerprint,raw FROM records ORDER BY seq"):
+            row=loads(raw)
+            if sha256(raw)!=fingerprint or dumps(row)!=raw:
+                raise ValueError(f"Cold journal record hash/type/bit mismatch at seq {seq}")
+            flags.update(value_flags(row))
+            first=seq if first is None else first
+            last=seq
+            rows+=1
+        return {"format":"tfvalue-audit-1","generated_ns":time.time_ns(),"first_seq":first,"last_seq":last,
+                "rows":rows,"raw_hash_type_bit_roundtrip":"passed","field_flags":dict(flags),
+                "collection_integrity":"evidence_insufficient",
+                "note":"Special/missing book values retained; flags are not proof of missing market Ticks"}
+    finally:
+        db.close()
+
+
 def verify_db(path):
     db = sqlite3.connect(f"file:{Path(path).resolve()}?mode=ro", uri=True)
     try:
