@@ -1,0 +1,55 @@
+{
+  "observed_ns": 1793608347384800000,
+  "old_pid": 60618,
+  "new_pid": 71879,
+  "elapsed_since_kill_seconds": 10.132616,
+  "heartbeat": {
+    "run": "05c3710de1734a9e82e64415634fbca5",
+    "pid": 71879,
+    "heartbeat_ns": 1793608346982450000,
+    "started_ns": 1793608340416379000,
+    "source": "TqSdk",
+    "account_mode": "TqSim",
+    "universe_count": 870,
+    "requested_count": 870,
+    "created_subscriptions": 1,
+    "ready_subscriptions": 0,
+    "confirmed_empty_subscriptions": 0,
+    "remaining_subscriptions": 869,
+    "failures": {},
+    "written_this_run": 0,
+    "realtime_written_this_run": 0,
+    "queue": 0,
+    "pending": 0,
+    "reconnects": 0,
+    "metrics": {
+      "max_queue": 0,
+      "max_rss_bytes": 276905984,
+      "max_receive_loop_seconds": 0.0,
+      "uncommitted_risk": "SDK/memory/queue until SQLite FULL commit; restart replays available overlap",
+      "initialization_paused_for_memory": false,
+      "cpu_seconds": 2.6339156160000003,
+      "oldest_pending_seconds": 0
+    },
+    "status": "running",
+    "backfill_helper_pid": null,
+    "backfill_pending_contracts": 0,
+    "coverage_status": "PENDING full day and source replay verification"
+  },
+  "launchd": {
+    "action": "status",
+    "jobs": {
+      "collector": {
+        "returncode": 0,
+        "stdout": "path = /Users/liuhui/Library/LaunchAgents/com.liuhui.tick-futures.collector.plist\nstate = running\nprogram = /Users/liuhui/.venvs/hf/bin/python\nworking directory = /Users/liuhui/tick_futures\nruns = 2\npid = 71879",
+        "stderr": ""
+      },
+      "maintenance": {
+        "returncode": 0,
+        "stdout": "path = /Users/liuhui/Library/LaunchAgents/com.liuhui.tick-futures.maintenance.plist\nstate = not running\nprogram = /Users/liuhui/.venvs/hf/bin/python\nworking directory = /Users/liuhui/tick_futures\nruns = 2\nlast exit code = 0",
+        "stderr": ""
+      }
+    },
+    "user_login_required": true
+  }
+}

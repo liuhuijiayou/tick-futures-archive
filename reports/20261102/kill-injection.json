@@ -1,0 +1,44 @@
+{
+  "injected_ns": 1793608337252185000,
+  "target_pid": 60618,
+  "signal": "SIGKILL",
+  "before_heartbeat": {
+    "run": "9ba0b1e2e3a04a1e90ee0e994321afee",
+    "pid": 60618,
+    "heartbeat_ns": 1793608336714758000,
+    "started_ns": 1793607800470953000,
+    "source": "TqSdk",
+    "account_mode": "TqSim",
+    "universe_count": 870,
+    "requested_count": 870,
+    "created_subscriptions": 870,
+    "ready_subscriptions": 870,
+    "confirmed_empty_subscriptions": 0,
+    "remaining_subscriptions": 0,
+    "failures": {},
+    "written_this_run": 9331,
+    "realtime_written_this_run": 0,
+    "queue": 0,
+    "pending": 0,
+    "reconnects": 0,
+    "metrics": {
+      "max_queue": 7,
+      "max_rss_bytes": 1345847296,
+      "max_receive_loop_seconds": 6.898589082993567,
+      "uncommitted_risk": "SDK/memory/queue until SQLite FULL commit; restart replays available overlap",
+      "initialization_paused_for_memory": false,
+      "cpu_seconds": 393.37888768,
+      "oldest_pending_seconds": 0
+    },
+    "status": "running",
+    "backfill_helper_pid": 71547,
+    "backfill_pending_contracts": 264,
+    "coverage_status": "PENDING full day and source replay verification"
+  },
+  "committed_checkpoint_count": 870,
+  "record_totals_before": [
+    1413910,
+    1413910
+  ],
+  "scope": "project collector only; authorized crash/restart acceptance"
+}

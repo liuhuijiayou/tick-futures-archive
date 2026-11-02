@@ -298,6 +298,11 @@ def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES,data_kind
         # Batched copies are outside the receive process. No pandas/float conversions.
         cursor = source.execute("SELECT * FROM records WHERE seq>? AND seq<=? ORDER BY seq", (index["last_seq"], high))
         while rows := cursor.fetchmany(2000):
+            for row in rows:
+                if sha256(row[8])!=row[7]:
+                    target.close()
+                    source.close()
+                    raise ValueError(f"Hot journal raw record hash mismatch at seq {row[0]}; archive not completed")
             target.executemany("INSERT INTO records VALUES(?,?,?,?,?,?,?,?,?)", rows)
             target.commit()
         watermarks={}

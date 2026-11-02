@@ -89,6 +89,20 @@ class Archive(unittest.TestCase):
                     upload(root/"archive", "owner/repo", "tag")
                 release.assert_not_called()
 
+    def test_corrupt_hot_record_never_gets_a_completed_archive(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            db=Store(root/"hot",min_free_bytes=0)
+            db.ingest("TEST.x",[row(1)],"run","initial_backfill")
+            # Fault injection only; production records have no update/delete path.
+            db.db.execute("UPDATE records SET raw=?",(b"corrupted raw bytes",))
+            db.db.commit()
+            with self.assertRaisesRegex(ValueError,"raw record hash"):
+                seal(root/"hot",root/"bad-archive")
+            self.assertFalse((root/"bad-archive/manifest.json").exists())
+            self.assertFalse((root/"hot/seal-index.json").exists())
+            db.close()
+
     def test_interrupted_upload_reuses_verified_assets(self):
         from tick_futures.codec import sha256
         with tempfile.TemporaryDirectory() as folder:

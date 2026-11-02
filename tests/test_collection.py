@@ -42,6 +42,16 @@ class Collection(unittest.TestCase):
         self.assertEqual(copied[0]["datetime"], 1793600000000000001)
         self.assertIsInstance(copied[0]["datetime"], np.int64)
 
+    def test_new_nested_field_is_copied_stably_without_losing_null_or_float_bits(self):
+        original=row(1,extra={"values":[None,np.float64(-0.0),np.float64(float("nan"))]})
+        frame=pd.DataFrame([original])
+        copied=frame_rows(frame)
+        before=dumps(copied)
+        frame.loc[0,"extra"]["values"][0]="mutated by SDK"
+        self.assertEqual(dumps(copied),before)
+        self.assertIsNone(copied[0]["extra"]["values"][0])
+        self.assertTrue(changed_rows(frame,pd.DataFrame([row(1)]))[1])
+
     def test_initialization_and_coalesced_updates_are_all_saved(self):
         with tempfile.TemporaryDirectory() as folder:
             db = Store(folder, min_free_bytes=0)

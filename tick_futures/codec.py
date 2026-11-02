@@ -95,7 +95,8 @@ def frame_rows(frame):
     columns = [(str(k), frame[k].to_numpy(copy=True)) for k in frame.columns]
     result = []
     for index in range(len(frame)):
-        row = {key: values[index] for key, values in columns}
+        row = {key: loads(dumps(values[index])) if isinstance(values[index],(dict,list,tuple)) else values[index]
+               for key, values in columns}
         if row.get("datetime", 0) > 0 and row.get("id", -1) >= 0:
             result.append(row)
     return result
