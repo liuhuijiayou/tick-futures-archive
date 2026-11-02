@@ -78,7 +78,7 @@ def main(argv=None):
                         pass
                 except RuntimeError:
                     active = True
-            if active:
+            if active or (args.command=="backfill" and (args.root/"service-config.json").exists()):
                 import time,uuid
                 request = {"status":"pending","requested_ns":time.time_ns(),"symbols":args.symbols,"rows":10000}
                 path = args.root/"requests"/("backfill-"+uuid.uuid4().hex+".json")

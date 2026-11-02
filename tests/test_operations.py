@@ -3,6 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
+import io
 
 from tick_futures.operations import admit_requests,complete_requests,forced_symbols
 from tick_futures.runtime import atomic_json
@@ -10,6 +11,22 @@ from tick_futures.store import Store
 
 
 class BackfillOperations(unittest.TestCase):
+    def test_managed_root_backfill_queues_even_before_the_collector_has_its_lock(self):
+        from tick_futures.__main__ import main
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            (root/'service-config.json').write_text('{}')
+            with patch('tick_futures.collector.collect',side_effect=AssertionError('must not start a second receiver')),patch('sys.stdout',io.StringIO()):
+                result=main(['--root',folder,'backfill','--symbols','SHFE.fixture'])
+            self.assertEqual(result,0)
+            request=next((root/'requests').glob('backfill-*.json'))
+            self.assertEqual(json.loads(request.read_text())['status'],'pending')
+
+    def test_configuration_failure_is_not_masked_by_uninitialized_state(self):
+        from tick_futures.collector import collect
+        with tempfile.TemporaryDirectory() as folder,patch('tick_futures.collector.connect',side_effect=ValueError('fixture missing credentials')),patch('tick_futures.collector.alert'):
+            with self.assertRaisesRegex(ValueError,'fixture missing credentials'):
+                collect(folder,seconds=5,min_free_bytes=0)
     def test_malformed_request_is_preserved_without_stopping_reception(self):
         with tempfile.TemporaryDirectory() as folder:
             directory=Path(folder)/"requests"

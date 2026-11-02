@@ -123,6 +123,9 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
     refresh_task = None
     pending_since = {}
     api = None
+    source_initialized=False
+    todo=deque()
+    desired=[]
     reconnects = 0
     attempts = 0
     last_heartbeat = 0
@@ -223,8 +226,11 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                         store.event(None, "universe", {"version": universe["version"], "target": len(all_symbols),
                                     "requested": len(desired), "reconnect": reconnects})
                     attempts = 0
+                    source_initialized=True
                 except Exception as exc:
                     alert(root, "connect_discovery_failed", {"type": type(exc).__name__, "message": str(exc)})
+                    if isinstance(exc,ValueError):
+                        raise
                     if api:
                         api.close()
                     api = None
@@ -491,6 +497,8 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     universe = fresh
             if initial_only and not todo and not pending and len(subscriptions)==len(desired) and all(v["state"] in ("subscribed","ready_empty") for v in subscriptions.values()):
                 break
+        if not source_initialized:
+            raise RuntimeError("No source session initialized; inspect authentication/discovery alerts")
         writer.close()
         while not writer.acks.empty():
             token, result = writer.acks.get_nowait()
@@ -509,7 +517,9 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
         return result
     except BaseException as exc:
         with store.db:
-            store.gap(None, "collector_failure", {"type": type(exc).__name__, "message": str(exc)}, status="gap_pending_replay")
+            store.gap(None, "collector_failure" if source_initialized else "source_initialization_failure",
+                      {"type": type(exc).__name__, "message": str(exc)},
+                      status="gap_pending_replay" if source_initialized else "evidence_insufficient")
             store.db.execute("UPDATE runs SET ended_ns=?,status='failed' WHERE run=?", (time.time_ns(), run))
         alert(root, "collector_failure", {"type": type(exc).__name__, "message": str(exc)})
         raise

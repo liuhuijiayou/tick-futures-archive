@@ -163,6 +163,8 @@ class Collection(unittest.TestCase):
                 time.sleep(.003)
                 if self.disconnect and self.calls==2:
                     raise ConnectionError("injected process-local transport failure")
+                if not self.disconnect and self.calls>=8:
+                    signal.raise_signal(signal.SIGTERM)
             def close(self):
                 pass
         apis=[FakeApi(True,[row(1),row(2)]),FakeApi(False,[row(1),row(2),row(3)])]
@@ -171,7 +173,7 @@ class Collection(unittest.TestCase):
             atomic_bytes(path/"metadata.tfrec",dumps([{"instrument_id":symbol,"product_id":"fixture","trading_time_day":[],"trading_time_night":[]}]))
             return {"version":"fixture","symbols":[symbol],"metadata_file":"metadata.tfrec"}
         with tempfile.TemporaryDirectory() as folder,patch("tick_futures.collector.connect",side_effect=apis),patch("tick_futures.collector.discover",side_effect=discover):
-            result=collect(folder,seconds=.5,min_free_bytes=0)
+            result=collect(folder,seconds=10,min_free_bytes=0)
             db=sqlite3.connect(Path(folder)/"hot.sqlite3")
             self.assertEqual(db.execute("SELECT count(*) FROM records").fetchone()[0],3)
             self.assertEqual(db.execute("SELECT count(*) FROM events WHERE kind='connection_exception'").fetchone()[0],1)
@@ -197,6 +199,8 @@ class Collection(unittest.TestCase):
                 if self.calls==2:
                     self.frame.loc[2]=row(3)
                     self.frame.loc[3]=row(4)
+                if self.calls>=8:
+                    signal.raise_signal(signal.SIGTERM)
                 return self.calls<=2
         api=Api()
         def discover(api,path):
@@ -204,7 +208,7 @@ class Collection(unittest.TestCase):
             atomic_bytes(path/"metadata.tfrec",dumps([{"instrument_id":symbol,"trading_time_day":[],"trading_time_night":[]}]))
             return {"version":"fixture","symbols":[symbol],"metadata_file":"metadata.tfrec"}
         with tempfile.TemporaryDirectory() as folder,patch("tick_futures.collector.connect",return_value=api),patch("tick_futures.collector.discover",side_effect=discover),patch("tick_futures.collector.changed_rows",wraps=compare) as comparisons:
-            collect(folder,seconds=.3,min_free_bytes=0)
+            collect(folder,seconds=10,min_free_bytes=0)
             db=sqlite3.connect(Path(folder)/"hot.sqlite3")
             self.assertEqual(db.execute("SELECT count(*) FROM records").fetchone()[0],4)
             self.assertLessEqual(comparisons.call_count,3)
