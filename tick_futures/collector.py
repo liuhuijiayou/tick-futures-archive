@@ -368,6 +368,8 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     "realtime_written_this_run": realtime_written, "queue": writer.inbox.qsize(), "pending": len(pending),
                     "reconnects": reconnects, "metrics": metrics, "status": "running",
                     "backfill_helper_pid":backfill_child.pid if backfill_child else None,"backfill_pending_contracts":len(backfill_todo),
+                    "backfill_ready_jobs":len(recovery_jobs),
+                    "backfill_waiting_import_contracts":sum(len(set(info["symbols"])-set(json.loads((Path(job)/"import-receipt.json").read_text())["symbols"] if (Path(job)/"import-receipt.json").exists() else [])) for job,info in recovery_jobs.items()),
                     "coverage_status": "PENDING full day and source replay verification"}
                 atomic_json(root / "heartbeat.json", status)
                 last_heartbeat = time.monotonic()
