@@ -89,6 +89,30 @@ class Archive(unittest.TestCase):
                     upload(root/"archive", "owner/repo", "tag")
                 release.assert_not_called()
 
+    def test_gap_revision_without_new_ticks_is_archived_and_chain_restores(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            db=Store(root/"hot",min_free_bytes=0)
+            db.ingest("TEST.x",[row(1)],"run","initial_backfill")
+            with db.db:
+                gap=db.gap("TEST.x","fixture",{},status="gap_pending_replay")
+            first=seal(root/"hot",root/"a")
+            with db.db:
+                db.db.execute("UPDATE gaps SET status='window_verified' WHERE seq=?",(gap,))
+                db.event("TEST.x","gap_closed_by_source_window",{"gap_id":gap})
+            second=seal(root/"hot",root/"b")
+            self.assertEqual(second["scope"]["rows"],0)
+            self.assertEqual(second["parent"],first["archive_id"])
+            result=restore_dataset(root,root/"restored",leaf=second["archive_id"])
+            self.assertEqual(result["rows"],1)
+            path=root/"restored/archives"/second["archive_id"]/"journal/journal.sqlite3"
+            self.assertEqual(verify_db(path)["rows"],0)
+            check=__import__("sqlite3").connect(path)
+            self.assertEqual(check.execute("SELECT status FROM gaps WHERE seq=?",(gap,)).fetchone()[0],"window_verified")
+            check.close()
+            self.assertEqual(seal(root/"hot",root/"unused")["status"],"no_new_records")
+            db.close()
+
     def test_corrupt_hot_record_never_gets_a_completed_archive(self):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder)

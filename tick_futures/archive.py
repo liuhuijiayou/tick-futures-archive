@@ -288,13 +288,20 @@ def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES,data_kind
         source = sqlite3.connect(f"file:{root / 'hot.sqlite3'}?mode=ro", uri=True)
         source.execute("BEGIN")
         high = source.execute("SELECT coalesce(max(seq),0) FROM records").fetchone()[0]
-        if high <= index["last_seq"]:
+        watermarks={table:source.execute(f"SELECT coalesce(max(seq),0) FROM {table}").fetchone()[0]
+                    for table in ("observations","events")}
+        latest=root/"discovery/universe-latest.json"
+        metadata_changed=latest.exists() and file_hash(latest)!=index.get("metadata_files",{}).get(latest.name)
+        audit_changed=any(value!=index.get("watermarks",{}).get(table,0) for table,value in watermarks.items())
+        if high <= index["last_seq"] and not audit_changed and not metadata_changed:
             source.close()
             return {"status": "no_new_records", "last_seq": high}
         staging = Path(tempfile.mkdtemp(prefix="seal-", dir=root))
         snapshot = staging / "journal.sqlite3"
         target = sqlite3.connect(snapshot)
         target.executescript(DDL)
+        target.execute("CREATE TABLE archive_context(key TEXT PRIMARY KEY,value TEXT)")
+        target.execute("INSERT INTO archive_context VALUES('parent_last_seq',?)",(str(index["last_seq"]),))
         # Batched copies are outside the receive process. No pandas/float conversions.
         cursor = source.execute("SELECT * FROM records WHERE seq>? AND seq<=? ORDER BY seq", (index["last_seq"], high))
         while rows := cursor.fetchmany(2000):
@@ -305,12 +312,12 @@ def seal(root, destination, *, level=9, shard_bytes=TARGET_SHARD_BYTES,data_kind
                     raise ValueError(f"Hot journal raw record hash mismatch at seq {row[0]}; archive not completed")
             target.executemany("INSERT INTO records VALUES(?,?,?,?,?,?,?,?,?)", rows)
             target.commit()
-        watermarks={}
         for table in ("checkpoints", "observations", "events", "gaps", "runs", "contracts"):
-            if table in ("observations","events","gaps"):
-                watermarks[table]=source.execute(f"SELECT coalesce(max(seq),0) FROM {table}").fetchone()[0]
+            if table in ("observations","events"):
                 cursor=source.execute(f"SELECT * FROM {table} WHERE seq>?",(index.get("watermarks",{}).get(table,0),))
             else:
+                # Gap statuses can change with an audit event. Preserve their
+                # complete current snapshot, just like contracts/checkpoints.
                 cursor = source.execute(f"SELECT * FROM {table}")
             columns = len(cursor.description)
             while rows := cursor.fetchmany(2000):

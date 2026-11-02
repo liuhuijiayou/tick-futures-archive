@@ -30,7 +30,11 @@ def verify_db(path):
             if seq and not db.execute("SELECT 1 FROM records WHERE seq=? AND symbol=?", (seq, symbol)).fetchone():
                 # Incremental archives may refer to an earlier parent checkpoint.
                 first = db.execute("SELECT min(seq) FROM records").fetchone()[0]
-                if first is None or seq >= first:
+                parent_last=None
+                if db.execute("SELECT 1 FROM sqlite_master WHERE name='archive_context'").fetchone():
+                    item=db.execute("SELECT value FROM archive_context WHERE key='parent_last_seq'").fetchone()
+                    parent_last=int(item[0]) if item else None
+                if (first is None and (parent_last is None or seq>parent_last)) or (first is not None and seq >= first):
                     raise ValueError(f"Checkpoint references a missing committed row: {symbol}")
         return {"status": "sqlite_and_all_record_bytes_types_bits_verified", "rows": count}
     finally:
