@@ -43,10 +43,11 @@ def main():
     p.add_argument("--with-parquet",action="store_true")
     a = p.parse_args()
     code = Path(__file__).resolve().parents[1]
-    lock_path = code/"decoder/runtime-lock.json"
+    lock_name="runtime-linux-x86_64-py313.json" if platform.system()=="Linux" and platform.machine()=="x86_64" else "runtime-lock.json"
+    lock_path = code/"decoder"/lock_name
     lock = json.loads(lock_path.read_text())
     if platform.system()!=lock["system"] or platform.machine()!=lock["machine"] or list(sys.version_info[:2])!=lock["python"]:
-        p.error("Bundled runtime targets macOS arm64 CPython 3.13; create and verify a runtime bundle for another platform first")
+        p.error("Use a matching bundled runtime: macOS arm64 or Linux x86_64, CPython 3.13")
     owner = gh_json("user")["login"]
     repo = gh_json("repos/"+a.repo)
     if not repo["private"] or repo["owner"]["login"].lower()!=owner.lower():
@@ -94,6 +95,13 @@ def main():
         result={"status":"all_journals_verified","journals":len(results),"rows":sum(r["rows"] for r in results)} if results else {"status":"no_journal_in_archive"}
         result.update({"original_source_journals":len(source_results),"preserved_source_rows":sum(r["rows"] for r in source_results),
                        "note":"Source rows are preserved delivery evidence, not additional unique market Ticks"})
+        second_files=list(a.output.resolve().rglob("seconds/snapshots.tfrec"))
+        second_results=[json.loads(subprocess.check_output([str(python),"-m","tick_futures","verify-seconds-file",str(path)],env=env,cwd=code)) for path in second_files]
+        observation_files=list(a.output.resolve().rglob("seconds/observations.tfrec"))
+        for path in observation_files:
+            subprocess.run([str(python),"-m","tick_futures","verify-seconds-file",str(path)],env=env,cwd=code,check=True,stdout=subprocess.DEVNULL)
+        result.update({"second_snapshot_files":len(second_results),"second_snapshot_export_rows":sum(r['rows'] for r in second_results),
+                       "second_observation_files_verified":len(observation_files)})
         report = {"status":"github_only_isolated_recovery_passed","runtime_tag":lock["tag"],
                   "wheel_bytes":sum(w["bytes"] for w in selected),"wheels_downloaded":len(selected),
                   "pip_network_or_cache_used":False,"production_directory_or_environment_used":False,

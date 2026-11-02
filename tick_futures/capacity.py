@@ -59,8 +59,11 @@ def polling_interval(peak_rows_per_second, *, window_rows=10000, overlap_fractio
 
 def capacity_plan(root, benchmark):
     root = Path(root)
-    universe = json.loads((root / "discovery/universe-latest.json").read_text())
-    metadata = loads((root / "discovery" / universe["metadata_file"]).read_bytes())
+    discovery=root/'discovery'
+    if not (discovery/'universe-latest.json').exists() and (discovery/'full/universe-latest.json').exists():
+        discovery=discovery/'full'
+    universe = json.loads((discovery / "universe-latest.json").read_text())
+    metadata = loads((discovery / universe["metadata_file"]).read_bytes())
     bench = json.loads(Path(benchmark).read_text())
     mains_path = root / "main-discovery/main-latest.json"
     mains = json.loads(mains_path.read_text()) if mains_path.exists() else None

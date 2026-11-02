@@ -1,0 +1,13 @@
+{
+  "format": "second-snapshot-1",
+  "record_encoding": "tfrec-1",
+  "key": ["symbol", "floor(original datetime / 1000000000)"],
+  "selection": "greatest original event timestamp in the second, then latest observed content for equal timestamp",
+  "raw_fields": "The selected source row is unchanged, including original datetime/id scalar types, missing values and float bit patterns.",
+  "subsecond_information": "Intentionally reduced at user request; this is not full raw Tick preservation.",
+  "empty_second": "No invented Tick or carry-forward row. Health evidence and unknown silence remain separately auditable.",
+  "open_second": "Durable candidate can be replaced by a later source event in the same second.",
+  "late_revision": "Previous raw content and fingerprints are audited; published archive versions are immutable.",
+  "archive_sequence": "Export ordinal, with later exports possibly containing revisions for an earlier second.",
+  "proof_scope": "Selected bytes and source-window overlap; no exchange upstream completeness guarantee."
+}

@@ -25,13 +25,15 @@ def definition(role, root):
     result = {"Label":label,"ProgramArguments":[sys.executable,"-m","tick_futures","--root",str(Path(root).resolve()),"service",role],
               "WorkingDirectory":str(BASE),"RunAtLoad":True,"ProcessType":"Background",
               "StandardOutPath":str(logs/(role+".stdout.log")),"StandardErrorPath":str(logs/(role+".stderr.log")),
-              "EnvironmentVariables":{"PATH":"/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin","PYTHONUNBUFFERED":"1"}}
+              "EnvironmentVariables":{"PATH":"/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin","PYTHONUNBUFFERED":"1","TZ":"Asia/Shanghai"}}
     if role == "collector":
         result.update({"KeepAlive":True,"ThrottleInterval":30,"ExitTimeOut":45,
                        "ProcessType":"Interactive","LowPriorityIO":False,"LowPriorityBackgroundIO":False,
                        "StartCalendarInterval":[{"Hour":7,"Minute":30},{"Hour":19,"Minute":30}]})
     else:
         result.update({"StartInterval":300,"Nice":15})
+        if config_path(root).exists() and json.loads(config_path(root).read_text()).get("storage_mode")=="main-second":
+            result["StartInterval"]=60
     return result
 
 
@@ -111,6 +113,9 @@ def manage(action, root, auth_config=None):
 def maintenance(root, config):
     root = Path(root)
     with InstanceLock(root/"maintenance.lock"):
+        if config.get("storage_mode")=="main-second":
+            from .seconds_archive import seconds_maintenance
+            return seconds_maintenance(root,config)
         heartbeat = root/"heartbeat.json"
         h = json.loads(heartbeat.read_text()) if heartbeat.exists() else {}
         age = (time.time_ns()-h.get("heartbeat_ns",0))/1e9
@@ -136,7 +141,7 @@ def maintenance(root, config):
         else:
             report["last_seal_ns"] = last_seal
         # Off-host market upload stays blocked until documented authorization.
-        if config["backup_rights_status"] == "approved":
+        if config.get("data_upload_enabled",False) and config["backup_rights_status"] == "approved":
             from .github import upload
             for path in backlog:
                 m = json.loads(path.read_text())
@@ -161,6 +166,16 @@ def service(role, root):
         except Exception as exc:
             alert(root,"maintenance_failed",{"type":type(exc).__name__,"message":str(exc)})
             raise
+    if config.get("storage_mode")=="main-second":
+        from .seconds_collector import collect_seconds
+        caffeinate = None
+        if sys.platform=="darwin":
+            caffeinate=subprocess.Popen(["/usr/bin/caffeinate","-i","-w",str(os.getpid())])
+        try:
+            return collect_seconds(root,config)
+        finally:
+            if caffeinate and caffeinate.poll() is None:
+                caffeinate.terminate()
     from .collector import collect
     # launchd restarts on unexpected exit. Keep one receiver alive through
     # lunch/midnight/weekends; calendar is for auditing, never for cutting data.

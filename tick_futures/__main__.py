@@ -8,13 +8,26 @@ import sys
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--root", type=Path, default=Path("data/derived/market"))
+    p.add_argument("--root", type=Path, default=Path("data/derived/main-seconds"))
     sub = p.add_subparsers(dest="command", required=True)
     sub.add_parser("discover")
     sub.add_parser("discover-main")
     parser = sub.add_parser("capacity")
     parser.add_argument("--benchmark", type=Path, default=Path("reports/20261102/second-capacity-benchmark.json"))
     parser.add_argument("--output", type=Path)
+    parser = sub.add_parser("collect-seconds")
+    parser.add_argument("--seconds", type=float)
+    sub.add_parser("seconds-status")
+    parser = sub.add_parser("prepare-seconds")
+    parser.add_argument("--trading-day", required=True)
+    parser.add_argument("--auth-config", type=Path, required=True)
+    sub.add_parser("server-preflight")
+    parser = sub.add_parser("server-units")
+    parser.add_argument("--output",type=Path,default=Path("deploy/generated"))
+    parser.add_argument("--user")
+    sub.add_parser("seal-seconds")
+    parser=sub.add_parser("verify-seconds-file")
+    parser.add_argument("path",type=Path)
     for name in ("collect", "backfill"):
         parser = sub.add_parser(name)
         parser.add_argument("--symbols", nargs="+")
@@ -77,9 +90,35 @@ def main(argv=None):
             with InstanceLock(args.root / "backfill-worker.lock"):
                 api = connect()
                 try:
-                    result = discover_mains(api, args.root / "discovery", args.root / "main-discovery")
+                    discovery=args.root/'discovery'
+                    if not (discovery/'universe-latest.json').exists():discovery=discovery/'full'
+                    result = discover_mains(api, discovery, args.root / "main-discovery")
                 finally:
                     api.close()
+        elif args.command == "prepare-seconds":
+            from .server import prepare_seconds
+            result=prepare_seconds(args.root,args.trading_day,args.auth_config)
+        elif args.command == "server-preflight":
+            from .server import server_preflight
+            result=server_preflight(args.root)
+        elif args.command == "server-units":
+            from .server import systemd_units
+            result=systemd_units(args.root,args.output,args.user)
+        elif args.command == "seal-seconds":
+            from .seconds_archive import seal_seconds
+            result=seal_seconds(args.root,force=True)
+        elif args.command == "verify-seconds-file":
+            from .seconds_archive import verify_tfrec
+            result=verify_tfrec(args.path)
+        elif args.command == "collect-seconds":
+            from .seconds_collector import collect_seconds
+            config = json.loads((args.root / "service-config.json").read_text())
+            import os
+            os.environ["TQ_AUTH_CONFIG"] = config["auth_config"]
+            result = collect_seconds(args.root, config, seconds=args.seconds)
+        elif args.command == "seconds-status":
+            from .seconds_archive import seconds_status
+            result = seconds_status(args.root)
         elif args.command == "capacity":
             from .capacity import capacity_plan
             from .runtime import atomic_json
@@ -89,6 +128,21 @@ def main(argv=None):
         elif args.command in ("collect", "backfill"):
             if not 1 <= args.data_length <= 10000 or (args.seconds is not None and args.seconds <= 0):
                 p.error("data-length must be 1..10000 and seconds must be positive")
+            config_path=args.root/'service-config.json'
+            if not config_path.exists() and args.root.resolve()==Path('data/derived/main-seconds').resolve():
+                raise ValueError('Run prepare-seconds on the receiving server first; the default seconds root requires explicit configuration')
+            if config_path.exists() and json.loads(config_path.read_text()).get('storage_mode')=='main-second':
+                config=json.loads(config_path.read_text())
+                if args.command=='collect':
+                    from .seconds_collector import collect_seconds
+                    import os
+                    os.environ['TQ_AUTH_CONFIG']=config['auth_config']
+                    result=collect_seconds(args.root,config,seconds=args.seconds)
+                else:
+                    from .seconds_archive import queue_replay
+                    result=queue_replay(args.root,args.symbols)
+                print(json.dumps(result,ensure_ascii=False,indent=2))
+                return 0
             from .collector import collect
             from .runtime import InstanceLock,atomic_json
             active = False
@@ -116,17 +170,35 @@ def main(argv=None):
             if "heartbeat_ns" in result:
                 result["heartbeat_age_seconds"] = (time.time_ns() - result["heartbeat_ns"]) / 1e9
         elif args.command == "audit":
+            if (args.root/'seconds.sqlite3').exists():
+                from .seconds_archive import audit_seconds
+                from .runtime import atomic_json
+                result=audit_seconds(args.root,scan_values=args.scan_values)
+                if args.output:atomic_json(args.output,result)
+                print(json.dumps(result,ensure_ascii=False,indent=2));return 0
             from .audit import coverage
             report = coverage(args.root, args.output, scan_values=args.scan_values)
             result = {k: v for k,v in report.items() if k not in ("contracts", "ledger", "gaps")}
         elif args.command == "overview":
+            if (args.root/'seconds.sqlite3').exists():
+                from .seconds_archive import seconds_status
+                from .runtime import atomic_json
+                result=seconds_status(args.root)
+                if args.output:atomic_json(args.output,result)
+                print(json.dumps(result,ensure_ascii=False,indent=2));return 0
             from .overview import overview
             report=overview(args.root,args.output)
             result={k:v for k,v in report.items() if k!="contracts"}
         elif args.command == "verify-db":
+            if (args.path is None and (args.root/'seconds.sqlite3').exists()) or (args.path is not None and args.path.name=='seconds.sqlite3'):
+                from .seconds_archive import verify_seconds_db
+                result=verify_seconds_db(args.path or args.root/'seconds.sqlite3')
+                print(json.dumps(result,ensure_ascii=False,indent=2));return 0
             from .audit import verify_db
             result = verify_db(args.path or args.root / "hot.sqlite3")
         elif args.command == "seal":
+            if (args.root/'seconds.sqlite3').exists():
+                raise ValueError('Use seal-seconds for the indexed second-snapshot archive chain; seal DESTINATION is the legacy full-Tick command')
             from .archive import seal
             result = seal(args.root, args.destination, level=args.level)
         elif args.command == "restore":

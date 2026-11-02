@@ -1,0 +1,89 @@
+{
+  "format": "tfruntime-1",
+  "system": "Linux",
+  "machine": "x86_64",
+  "python": [
+    3,
+    13
+  ],
+  "tag": "decoder-runtime-linux-x86_64-py313-v1",
+  "wheels": [
+    {
+      "name": "numpy-2.5.2-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "package": "numpy",
+      "version": "2.5.2",
+      "role": "core",
+      "bytes": 16709995,
+      "sha256": "29b86ff8a6cc556b47ec6b64b194815cc80e6bf5eedcc6cddfd65318cb0b4eee"
+    },
+    {
+      "name": "pandas-3.0.5-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+      "package": "pandas",
+      "version": "3.0.5",
+      "role": "core",
+      "bytes": 10938525,
+      "sha256": "4b11c36e218331d0387cbe3a0a5f75162357a1d92d57b2b08a336ff94b19b2be"
+    },
+    {
+      "name": "zstandard-0.25.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "package": "zstandard",
+      "version": "0.25.0",
+      "role": "core",
+      "bytes": 5547173,
+      "sha256": "8e735494da3db08694d26480f1493ad2cf86e99bdd53e8e9771b2752a5c0246a"
+    },
+    {
+      "name": "python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+      "package": "python_dateutil",
+      "version": "2.9.0.post0",
+      "role": "core",
+      "bytes": 229892,
+      "sha256": "a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427"
+    },
+    {
+      "name": "six-1.17.0-py2.py3-none-any.whl",
+      "package": "six",
+      "version": "1.17.0",
+      "role": "core",
+      "bytes": 11050,
+      "sha256": "4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274"
+    },
+    {
+      "name": "tzdata-2025.2-py2.py3-none-any.whl",
+      "package": "tzdata",
+      "version": "2025.2",
+      "role": "core",
+      "bytes": 347839,
+      "sha256": "1a403fada01ff9221ca8044d701868fa132215d84beb92242d9acd2147f667a8"
+    }
+  ],
+  "total_wheel_bytes": 33784474,
+  "core_wheel_bytes": 33784474,
+  "official_pypi_hash_checks": [
+    {
+      "name": "numpy-2.5.2-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+      "official_pypi_sha256_matches": true
+    },
+    {
+      "name": "pandas-3.0.5-cp313-cp313-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+      "official_pypi_sha256_matches": true
+    },
+    {
+      "name": "zstandard-0.25.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+      "official_pypi_sha256_matches": true
+    },
+    {
+      "name": "python_dateutil-2.9.0.post0-py2.py3-none-any.whl",
+      "official_pypi_sha256_matches": true
+    },
+    {
+      "name": "six-1.17.0-py2.py3-none-any.whl",
+      "official_pypi_sha256_matches": true
+    },
+    {
+      "name": "tzdata-2025.2-py2.py3-none-any.whl",
+      "official_pypi_sha256_matches": true
+    }
+  ],
+  "linux_execution_verified_on_this_mac": false
+}

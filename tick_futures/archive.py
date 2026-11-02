@@ -93,11 +93,13 @@ def create(files, destination, *, codec="zstd", level=9, shard_bytes=TARGET_SHAR
     from .common import BASE
     manifest["record_schema"] = json.loads((BASE / "schema/tfrec-1.json").read_text())
     manifest["dependencies"]["pandas"] = importlib.metadata.version("pandas")
-    runtime=BASE/"decoder/runtime-lock.json"
+    import platform
+    runtime=BASE/"decoder"/("runtime-linux-x86_64-py313.json" if platform.system()=="Linux" and platform.machine()=="x86_64" else "runtime-lock.json")
     if runtime.exists():
         lock=json.loads(runtime.read_text())
         manifest["decoder_runtime"]={"tag":lock["tag"],"manifest_sha256":file_hash(runtime),
-                                      "core_wheel_bytes":lock["core_wheel_bytes"],"platform":"macOS arm64 CPython 3.13"}
+                                      "core_wheel_bytes":lock["core_wheel_bytes"],
+                                      "platform":lock['system']+' '+lock['machine']+' CPython '+'.'.join(map(str,lock['python']))}
     try:
         manifest["code_commit"] = subprocess.check_output(["git", "rev-parse", "HEAD"], stderr=subprocess.DEVNULL, text=True).strip()
     except subprocess.CalledProcessError:

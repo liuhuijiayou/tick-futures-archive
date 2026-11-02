@@ -1,56 +1,40 @@
 # tick_futures
 
-国内期货 Tick **只读持续采集 → 可恢复落盘 → 质量审计 → 无损归档 → 恢复**。仅使用 TqSim。已有基础特征和历史样本保留；本任务不继续开发因子、策略或回测。
+国内期货只读行情采集、持久化、质量审计与本地归档。当前交付范围为**主力真实月份合约，每个源事件秒的最后一条快照**，保留量额、持仓和全部可用盘口字段。仅用 TqSim，不连接交易账户或下单。
 
-运行与验收台账见 [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md#L1)，归档协议与远端恢复见 [docs/RECOVERY.md](docs/RECOVERY.md#L1)。已实际确认订阅全部 870 个枚举目标，并完成真实 kill 后的 launchd 拉起；完整日夜盘覆盖和真实行情 GitHub 恢复仍为 PENDING。覆盖状态与归档恢复状态分别记录。
+**本机已停止行情接收与补采，两个项目 launchd 已卸载。后续本机只做代码开发和离线验证；GitHub 仅推送代码、schema、模板及交接文档，不上传行情或凭据。** Ubuntu/Debian x86_64 服务器自行采集，上线步骤见 [服务器交接文档](docs/SERVER_HANDOFF.md#L1)。服务器尚未实际部署，完整日夜盘验收为 PENDING。
 
-2026-11-02 19:52 的[数据概览](reports/20261102/DATA_OVERVIEW.md#L1)：870 个合约、3,858,760 条主记录，当前实时与补采导入队列均为 0。启动前缀待核验合约为 0，仍有故障/静默及历史身份未知；这不是完整日夜盘验收。[执行审计](reports/20261102/execution-audit.json#L1)记录真实运行、测试、上传和恢复次数。
+每秒末快照是按用户选择的投影，秒内其他 Tick 会减少，不能称为原始 Tick 全保留；被选快照的字段、类型、浮点位模式严格可逆。无报价的秒不填前值、不伪造 Tick。SDK 快照、序号连续和归档恢复都不能证明上游零漏发。
 
-后续已按用户选择实测“每秒末快照，保留量额/持仓/盘口”，并增加 `discover-main`、`capacity` 入口。盘前取得 87 个有效主力及 1 个过期供应商异常；全合约与主力的秒级容量、100GB 总预算和周期取窗边界见 [专项估算](docs/SECOND_SNAPSHOT_PLAN.md#L1)。生产范围/调度尚未切换，容量参数不是已部署硬配额。
-
-## 持续采集与运维入口
+## 开发与服务器接管
 
 ```bash
-cd ~/tick_futures
-PY=~/.venvs/hf/bin/python
-# 只读行情认证仅环境变量或显式 AST 配置，不执行旧脚本
-export TQ_AUTH_CONFIG=/明确指定的/auth.py
-$PY -m tick_futures discover
-$PY -m tick_futures collect --data-length 1000 # 前台，全枚举；部署采用此缓冲
-$PY -m tick_futures status
-$PY -m tick_futures overview --output reports/20261102/data-overview.json
-$PY -m tick_futures audit --output reports/coverage.json
-$PY -m tick_futures backfill --symbols SHFE.au2612  # 运行中则排队独立取得近期 10000 行
-$PY -m tick_futures verify-db
-$PY -m tick_futures seal data/derived/archive-001
-$PY -m tick_futures verify-archive data/derived/archive-001
-$PY -m tick_futures restore-dataset data/derived/market/archives /private/tmp/market-restored
-$PY -m tick_futures schedule install --auth-config /明确指定的/auth.py
-$PY -m tick_futures schedule enable
-$PY -m tick_futures schedule status
-$PY -m tick_futures schedule disable
-$PY -m tick_futures schedule uninstall        # 不删除任何数据
+# 本机离线验证，无行情认证、无 SDK 连接
+~/.venvs/hf/bin/python scripts/verify_offline.py
+~/.venvs/hf/bin/python -m unittest discover -s tests -v
+~/.venvs/hf/bin/python -m tick_futures.verify_samples  # 仅有原始样本的开发机
+~/.venvs/hf/bin/python -m tick_futures --help
 ```
 
-统一入口支持 `--root PATH`（放在子命令前）；本机部署根为 `data/derived/market`。launchd collector 持续连接，maintenance 每 5 分钟独立检查、每小时封存。07:30/19:30 为启动兜底，已运行的进程持续接收，不在午休或跨午夜退出。当前部署选择 1000 行缓冲；后台最多一个同账户 TqSim 补采子进程，每批最多 8 个合约，以公开 10000 行窗口生成稳定日志。编码/校验由两个独立进程并行，历史预处理最多两个等待，SQLite 仍顺序提交并在成功后 ACK。窗口按行计，不承诺固定分钟数。
+服务器使用独立 Python 3.13 环境和 editable 安装。必须先将**主机时区**设为 Asia/Shanghai，并确认 NTP 同步；仅设置进程 TZ 不够。`server-preflight` 在 Linux 上拒绝错误时区或未同步时钟，所有 systemd 日历触发也显式带 Asia/Shanghai；原始 epoch 不加减8小时。
 
-初始化并发保留已验证的 4 路；8 路仅在 24 合约小批测试中提速，全规模试运行发生超时，已回退，不能以小批测试宣称全规模更快。`--prepare-workers 2 --init-concurrency 4` 可显式指定。接收服务使用项目专属 Interactive/普通 I/O 优先级；维护仍为 Background/Nice 15，未修改全局电源策略。实际 80,000 条同输入导入从 20.389 秒降到 5.562 秒，完整有序字节散列一致。[性能证据](reports/20261102/parallel-summary.json#L1)
+接管命令包括 `prepare-seconds`、`server-preflight`、`server-units`、`service collector`、`status`、`overview`、`audit --scan-values`、`backfill`、`seal-seconds`、`restore-dataset`、`verify-db`。默认根目录为 `data/derived/main-seconds`，自定义目录在子命令前加 `--root PATH`。认证仅环境变量或显式 AST 配置，不能执行旧交易脚本。完整安装、状态、停用及卸载命令见交接文档。
 
-低于 20 GiB 告警、停止新增冷归档/补采，低于 5 GiB 停写；不自动删除热库、staging、补采日志或旧样本。当前保留全部副本，真实行情的远端备份授权未落实前不能靠清理热库维持无限运行。告警保存在 `last_alert.json` 和 launchd stderr；没有配置外部通知接收人。
+采集进程持续运行，约200ms截止轮询；成功 FULL 提交后才推进源游标。保留每秒末快照不等于每秒只请求一次行情。心跳约5秒，主力映射复核约5分钟，维护每分钟，封存约每小时，07:30/19:30为启动兜底。午休及跨午夜维持连接。换月先加入新主力，新清单就绪后保留60秒旧月重叠；旧SDK对象到重连才释放，状态单独列出。
 
-托管目录的 `backfill` 始终写入持久化请求，即使服务正启动或暂时停止也不抢占接收锁；未完成 queued 请求在重启后继续。请求文件会区分 queued/completed/failed，完成取窗操作不代表行情缺口已经闭合。独立一次性回补使用另外的 `--root` 与显式认证环境，不占正式库。[验收边界](docs/ACCEPTANCE.md#L1)
+近期 Tick 窗口上限10,000行，实时缓冲选1,000行；断点以内容锚点核对，必要时单独请求10,000行。窗口按行计，不能由1Hz输出反推可安全每1/2/3小时离线下载；当前采用连续接收。故障超过源窗口会明确留下未知/不可补范围，不保证无条件“任何一秒不丢”。
 
-凭据不进 Git、plist 或日志。需要用户登录、网络与电源保持在线；项目未修改系统休眠设置。SDK 静默、序号连续或程序正常退出都不能证明交易所上游零漏数。按日期下载已知无权限，旧 probe 默认跳过该检查。GitHub 仅创建了本人私有目标，真实行情异地备份授权待核实；公开声明和 SDK 开源许可不能替代行情数据权利。
+100GB是数据总预算，包含热库、冷归档和工作副本：80GB告警、90GB暂停新增写入，留10GB工作余量；空闲磁盘不足5GiB也拒写。无自动历史删除，因此必须在达到水位前由服务器运维处理留存，不能无限期积累。短样本推算主力秒级净压缩负载约45MB/交易日，三倍情景135MB，**不含SQLite、索引和工作副本，也不是完整交易日实测**；旧估算见 [容量研究](docs/SECOND_SNAPSHOT_PLAN.md#L1)。
 
-压缩以严格字节/类型/位模式往返为前提，默认独立 Zstd 9 无字典分片。基准包含 gzip、三档 Zstd、两档 XZ、两档 Parquet/Zstd，并计入解码代码、元数据、所需依赖；不以最大等级代表最优。实际发布的依赖包还含可选 Arrow，完整存储成本与本地所有保留副本另列。最新报告见执行台账。
+冷路径使用独立 Zstd9 无字典分片，逐片压缩/原始 SHA-256 和 TFREC 类型/位模式校验，并在本地空目录恢复。覆盖账本与归档完整性分别报告。历史远端上传/恢复模块保留，自动数据上传默认关闭；当前不执行行情 GitHub 上传或下载。
 
-私有远端已完成纯合成数据的分片续传、父归档链和空目录恢复。仅从 GitHub 恢复的可执行命令见 [恢复说明](docs/RECOVERY.md#L1)。这不构成真实行情的远端恢复验收。
+运行记录见 [PROJECT_CONTEXT.md](PROJECT_CONTEXT.md#L1)，证明范围见 [验收说明](docs/ACCEPTANCE.md#L1)，格式与恢复见 [恢复说明](docs/RECOVERY.md#L1)。此前870合约原型、六市场盘中测试、压缩基准与纯合成 GitHub 恢复都是历史验证，不能描述为当前运行状态或服务器验收。
 
-新概览区分目标数、当前订阅、持久化行数、历史/差分来源、待核验前缀及归档清单。当前 SDK DataFrame 的 `id/datetime` 实测为 float64，按原类型和位模式保留；索引中的整数时间不能恢复 SDK 之前已损失的纳秒精度。代码对原本为整数的时间戳保持整数，另有精度回归测试。不要把供应商长历史窗口，或 `realtime_update` 标签，直接当作当前合约的完整实时覆盖。
+## 原样本及历史验证
 
-采集基线与原有功能如下。以下 2026-11-02 午休样本记录保留原时点结论；下午的新验收以执行台账为准。
+以下保留2026-11-02的样本和既有功能说明。原有71份样本/证据及既有特征代码不改写；历史全量热库和测试工作副本按用户要求清理，已校验的冷归档仍在本地保留，不向服务器或GitHub传输。在线 probe 示例仅说明旧原型用法，本机不再执行。
 
-## 快速使用
+## 历史快速使用
 
 在本项目根目录运行，复用本机已验证环境：Python 3.13.12、TqSdk 3.10.2、pandas 3.0.5、NumPy 2.5.2。依赖版本记录于 [pyproject.toml](pyproject.toml)。
 

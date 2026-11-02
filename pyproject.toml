@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "tick-futures"
-version = "0.2.0"
+version = "0.3.0"
 description = "Domestic futures Tick collection, lossless archival, quality audit and recovery"
 requires-python = ">=3.11"
 dependencies = ["tqsdk==3.10.2", "pandas==3.0.5", "numpy==2.5.2", "zstandard==0.25.0", "psutil>=6,<8"]

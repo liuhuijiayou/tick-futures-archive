@@ -1,5 +1,29 @@
 # 归档与恢复格式
 
+## 当前：主力秒级快照、本地归档
+
+用户已要求GitHub仅代码/文档，不再上传行情，也不在开发机下载行情。服务器新采数据保存在本地。历史远端模块保留，但自动数据上传默认关闭；下方旧远端示例不是当前部署步骤。
+
+`seconds.sqlite3`保存每(symbol,源事件秒)所选的最后快照。当前候选可被同秒更新替换，原始TFREC字段、类型与位模式不变；已封存的迟到修订另记增量版本和旧原值。源checkpoint与候选同一FULL事务；收到ACK才推进接收端基线。历史补采导入不改变实时checkpoint。秒内其他Tick按用户选择减少，不能把该格式叫全原始Tick无损。
+
+`seal-seconds`导出闭合秒（留2秒尾部）、观察来源/接收时间、增量质量/健康证据、版本化主力映射和schema。采用64MiB原始分片、独立Zstd9帧、无字典；每片压缩/原始SHA逐一核验，在本地空目录恢复后才推进exported_generation。审计变化也可产生零数据修订。已验证的临时staging/恢复目录清理，热候选和冷归档保留；没有自动删除历史数据。
+
+```bash
+.venv/bin/python -m tick_futures seal-seconds
+.venv/bin/python -m tick_futures verify-db
+.venv/bin/python -m tick_futures restore-dataset data/derived/main-seconds/archives /var/tmp/tick-empty-restore
+.venv/bin/python -m tick_futures verify-seconds-file /恢复目录/archives/归档ID/seconds/snapshots.tfrec
+```
+
+目标必须为空，父归档必须齐全；恢复得到各版本的原始文件，保持版本顺序，**不会自动合并或覆盖先前修订**。seconds/snapshots.tfrec是所选源记录，observations.tfrec记录接收语义/来源/generation。缺片、坏片、错序、字典或编码版本不兼容均非零失败。所选快照的质量与采集覆盖分别审计；完整恢复不证明上游全量。
+
+开发机已按用户要求清理热/测试工作副本；原样本以及曾空目录核验过的紧凑冷归档保留在data/derived/retained-evidence-20261102。没有将其上传或迁移到服务器。
+
+## 历史：全Tick追加日志及GitHub合成恢复验证
+
+下述为旧原型格式/能力说明；本机不再运行或上传数据。文中“全部副本保留”和“staging保留”描述清理前历史，现以用户授权清理记录为准。普通Git代码下载不等于行情恢复。Linux公开依赖锁已补入decoder/runtime-linux-x86_64-py313.json，但Linux执行验收仍PENDING，不能用Mac验证代替。
+
+
 热库 `hot.sqlite3` 是追加日志。`records.raw` 按 [TFREC1 schema](../schema/tfrec-1.json#L1) 编码原始字段，`fingerprint` 是编码后、压缩前 SHA-256。Python/NumPy 类型、整数、NaN 载荷、Inf、负零、None/pd.NA/pd.NaT 和字段顺序可逆。`seq` 是本机持久化顺序；单次 SDK 窗口内保留返回顺序，跨合约未提供的原始网络交错顺序无法恢复。`received_ns` 是应用观察窗口时间，不是每条历史行情的网络到达时间。`event_ns` 与 `sdk_id` 仅作索引，原值仍在 BLOB。`observations` 保存每次投递的有序指纹，`events` 保留修订和质量标记。SQLite 完整性和 BLOB 逐条往返校验独立于压缩文件校验。
 
 `seal` 以一致只读事务导出上次封存之后的 seq 范围到独立 SQLite journal，并保留元数据、schema 和审计。observations/events 增量保存，contracts/checkpoints/runs/gaps 保存完整状态快照；缺口状态变化有事件链，即使没有新 Tick 也生成审计修订归档。空数据分片的 `archive_context` 明确声明 checkpoint 所在父范围。热库不清理。`seal-index.json` 记录不可变归档及父归档；后续增量不能替代此前归档。每个归档都保留一个原始 staging 副本，计入本地磁盘成本。
