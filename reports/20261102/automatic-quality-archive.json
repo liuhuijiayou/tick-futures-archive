@@ -1,0 +1,42 @@
+{
+  "archive_id": "523290d0f8584441945d730e2bee3c15",
+  "scope": {
+    "first_seq": 3858761,
+    "last_seq": 3858760,
+    "rows": 0,
+    "contracts": [],
+    "gaps": {
+      "evidence_insufficient": 5,
+      "gap_pending_replay": 1,
+      "window_verified": 883
+    },
+    "collection_integrity": "evidence_insufficient",
+    "original_source_journals_added": 0,
+    "value_audit": {
+      "rows": 0,
+      "raw_hash_type_bit_roundtrip": "passed"
+    },
+    "source_semantics": "TqSdk snapshots; no exchange upstream completeness claim"
+  },
+  "original_file_recovery": "all_original_bytes_match",
+  "quality_report": {
+    "format": "tfvalue-audit-1",
+    "generated_ns": 1793616069992794000,
+    "first_seq": null,
+    "last_seq": null,
+    "rows": 0,
+    "raw_hash_type_bit_roundtrip": "passed",
+    "field_flags": {},
+    "collection_integrity": "evidence_insufficient",
+    "note": "Special/missing book values retained; flags are not proof of missing market Ticks"
+  },
+  "output": "/private/tmp/tick-quality-restore-5jjwb34v",
+  "remote_restore": false,
+  "journal_verifications": [
+    {
+      "path": "journal/journal.sqlite3",
+      "status": "sqlite_and_all_record_bytes_types_bits_verified",
+      "rows": 0
+    }
+  ]
+}

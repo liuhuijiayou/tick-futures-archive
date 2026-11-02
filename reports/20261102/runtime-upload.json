@@ -1,6 +1,6 @@
 {
   "status": "all_runtime_assets_redownloaded_sha256_verified",
-  "release": "https://github.com/liuhuijiayou/tick-futures-archive/releases/tag/untagged-b4c5171e5dc1785866f4",
+  "release": "https://github.com/liuhuijiayou/tick-futures-archive/releases/tag/decoder-runtime-v1",
   "assets": [
     {
       "name": "numpy-2.5.2-cp313-cp313-macosx_14_0_arm64.whl",
@@ -46,5 +46,6 @@
     }
   ],
   "total_asset_bytes": 47662363,
-  "market_data_assets": 0
+  "market_data_assets": 0,
+  "canonical_release_url_verified_ns": 1793611449542286000
 }

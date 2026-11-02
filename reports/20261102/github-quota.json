@@ -1,0 +1,15 @@
+{
+  "observed_ns": 1793609566195651000,
+  "core": {
+    "limit": 5000,
+    "used": 17,
+    "remaining": 4983,
+    "reset": 1793611108
+  },
+  "graphql": {
+    "limit": 5000,
+    "used": 0,
+    "remaining": 5000,
+    "reset": 1793613166
+  }
+}

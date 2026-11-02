@@ -1,0 +1,176 @@
+{
+  "started_ns": 1793611120101610000,
+  "ended_ns": 1793611122817907000,
+  "result": {
+    "format": "tfarchive-1",
+    "archive_id": "3cacc209bf9a4fdc984237408fd7bd45",
+    "created_ns": 1793611121517239000,
+    "data_kind": "market",
+    "source": "TqSdk",
+    "scope": {
+      "first_seq": 2769804,
+      "last_seq": 2778803,
+      "rows": 9000,
+      "contracts": [
+        {
+          "symbol": "DCE.pp2702",
+          "rows": 9000,
+          "first_ns": 1793588469582000128,
+          "last_ns": 1793601943721999872
+        }
+      ],
+      "gaps": {
+        "evidence_insufficient": 5,
+        "gap_pending_replay": 241,
+        "window_verified": 304
+      },
+      "collection_integrity": "evidence_insufficient",
+      "source_semantics": "TqSdk snapshots; no exchange upstream completeness claim"
+    },
+    "collection_integrity": "evidence_insufficient",
+    "archive_integrity": "local_roundtrip_verified",
+    "record_format": "tfrec-1",
+    "dictionary": null,
+    "parent": "1983d8f540c94e4abe209fb8544de603",
+    "codec": "zstd",
+    "level": 9,
+    "dependencies": {
+      "numpy": "2.5.2",
+      "zstandard": "0.25.0",
+      "pandas": "3.0.5"
+    },
+    "files": [
+      {
+        "path": "journal/journal.sqlite3",
+        "raw_bytes": 151670784,
+        "raw_sha256": "83feb3161342006068a002f9d4296810d9d728ecd5c6c4433e2f9559fbfcca7b",
+        "parts": [
+          {
+            "ordinal": 0,
+            "name": "part-000000-09aae4bd4f1ca489f204cc10.zstd",
+            "raw_bytes": 151670784,
+            "stored_bytes": 19457628,
+            "raw_sha256": "83feb3161342006068a002f9d4296810d9d728ecd5c6c4433e2f9559fbfcca7b",
+            "stored_sha256": "09aae4bd4f1ca489f204cc10e4703afc02e65a851bfaa6407464acd57c019d9c",
+            "codec": "zstd",
+            "level": 9,
+            "dictionary": null
+          }
+        ]
+      },
+      {
+        "path": "discovery/metadata-1793610841155526000.tfrec",
+        "raw_bytes": 1943802,
+        "raw_sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd",
+        "parts": [
+          {
+            "ordinal": 0,
+            "name": "part-000001-801ae775fbfcef37b282f098.zstd",
+            "raw_bytes": 1943802,
+            "stored_bytes": 27647,
+            "raw_sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd",
+            "stored_sha256": "801ae775fbfcef37b282f098a9937a1f02577af7f149c779a093bd6463e1546c",
+            "codec": "zstd",
+            "level": 9,
+            "dictionary": null
+          }
+        ]
+      },
+      {
+        "path": "discovery/universe-1793610841155526000.json",
+        "raw_bytes": 16719,
+        "raw_sha256": "0090c8537d6722c8a6e3fccc85c09864e8728c45867d6eb1bd2502878bc828d6",
+        "parts": [
+          {
+            "ordinal": 0,
+            "name": "part-000002-0cc99d3125ab0a5067dc5e49.zstd",
+            "raw_bytes": 16719,
+            "stored_bytes": 2197,
+            "raw_sha256": "0090c8537d6722c8a6e3fccc85c09864e8728c45867d6eb1bd2502878bc828d6",
+            "stored_sha256": "0cc99d3125ab0a5067dc5e498b03f4a68fbbfafa68a30a2ad527c89e5f4691d8",
+            "codec": "zstd",
+            "level": 9,
+            "dictionary": null
+          }
+        ]
+      },
+      {
+        "path": "discovery/universe-latest.json",
+        "raw_bytes": 16719,
+        "raw_sha256": "0090c8537d6722c8a6e3fccc85c09864e8728c45867d6eb1bd2502878bc828d6",
+        "parts": [
+          {
+            "ordinal": 0,
+            "name": "part-000003-0cc99d3125ab0a5067dc5e49.zstd",
+            "raw_bytes": 16719,
+            "stored_bytes": 2197,
+            "raw_sha256": "0090c8537d6722c8a6e3fccc85c09864e8728c45867d6eb1bd2502878bc828d6",
+            "stored_sha256": "0cc99d3125ab0a5067dc5e498b03f4a68fbbfafa68a30a2ad527c89e5f4691d8",
+            "codec": "zstd",
+            "level": 9,
+            "dictionary": null
+          }
+        ]
+      }
+    ],
+    "part_order": [
+      "part-000000-09aae4bd4f1ca489f204cc10.zstd",
+      "part-000001-801ae775fbfcef37b282f098.zstd",
+      "part-000002-0cc99d3125ab0a5067dc5e49.zstd",
+      "part-000003-0cc99d3125ab0a5067dc5e49.zstd"
+    ],
+    "record_schema": {
+      "format": "tfrec-1",
+      "encoding": "ASCII JSON object followed by LF; canonical compact separators; insertion order retained",
+      "object": {
+        "format": "tfrec-1",
+        "value": "tagged scalar or recursively tagged container"
+      },
+      "scalar_tags": {
+        "numpy": [
+          "dtype.str",
+          "original scalar bytes as hexadecimal, preserving dtype byte order"
+        ],
+        "float64": [
+          "IEEE754 binary64 network-order 8 bytes as hexadecimal; signed zero and NaN payload retained"
+        ],
+        "int": [
+          "base-10 integer string, arbitrary precision"
+        ],
+        "bool": [
+          "JSON boolean"
+        ],
+        "str": [
+          "JSON escaped Unicode string"
+        ],
+        "bytes": [
+          "base64"
+        ],
+        "null": [],
+        "pd.NA": [],
+        "pd.NaT": []
+      },
+      "container_tags": {
+        "map": "ordered pairs of tagged keys/values",
+        "list": "tagged elements",
+        "tuple": "tagged elements"
+      },
+      "unsupported_types": "fail closed, never stringify, round, drop, or coerce",
+      "timestamp_rule": "integer nanoseconds are serialized as integers/NumPy int scalars without floating point conversion",
+      "receive_time": "application observation time of stable SDK window, not original per-tick wire arrival time",
+      "arrival_order": "seq preserves local stable-window observation/commit order; original wire interleaving inside SDK-coalesced cross-contract notifications is not exposed and is not claimed",
+      "replay": "only exact same-source content overlap is suppressed; observations record the decision; all revisions/reset ambiguity retained",
+      "compression": "independently decodable checksum-enabled Zstandard frames; no dictionary; originals hashed before compression"
+    },
+    "decoder_runtime": {
+      "tag": "decoder-runtime-v1",
+      "manifest_sha256": "79190a44ad719012ec7a2e0056ce9cf0fa27365486cbb9757766b137c3f58fe4",
+      "core_wheel_bytes": 16505168,
+      "platform": "macOS arm64 CPython 3.13"
+    },
+    "code_commit": "45438abf5a82ab3c7d57e127e409d5c690350ce2",
+    "raw_bytes": 153648024,
+    "stored_part_bytes": 19489669,
+    "elapsed_seconds": 1.2217741669737734
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "run": "104db57b67ff4e088dfb32dd6987ee89",
+  "pid": 80191,
+  "heartbeat_ns": 1793614665752737000,
+  "started_ns": 1793614198116661000,
+  "source": "TqSdk",
+  "account_mode": "TqSim",
+  "universe_count": 870,
+  "requested_count": 870,
+  "created_subscriptions": 145,
+  "ready_subscriptions": 129,
+  "confirmed_empty_subscriptions": 0,
+  "remaining_subscriptions": 725,
+  "failures": {
+    "CZCE.CY701": {
+      "type": "InitializationTimeout",
+      "message": "No serial confirmation in 180s; still monitoring"
+    },
+    "CFFEX.TF2706": {
+      "type": "InitializationTimeout",
+      "message": "No serial confirmation in 180s; still monitoring"
+    },
+    "GFEX.ps2702": {
+      "type": "InitializationTimeout",
+      "message": "No serial confirmation in 180s; still monitoring"
+    },
+    "SHFE.ag2709": {
+      "type": "InitializationTimeout",
+      "message": "No serial confirmation in 180s; still monitoring"
+    },
+    "INE.lu2703": {
+      "type": "InitializationTimeout",
+      "message": "No serial confirmation in 180s; still monitoring"
+    },
+    "DCE.bb2707": {
+      "type": "InitializationTimeout",
+      "message": "No serial confirmation in 180s; still monitoring"
+    },
+    "CZCE.CY702": {
+      "type": "InitializationTimeout",
+      "message": "No serial confirmation in 180s; still monitoring"
+    },
+    "CFFEX.TL2612": {
+      "type": "InitializationTimeout",
+      "message": "No serial confirmation in 180s; still monitoring"
+    }
+  },
+  "written_this_run": 0,
+  "realtime_written_this_run": 0,
+  "queue": 0,
+  "pending": 0,
+  "reconnects": 0,
+  "metrics": {
+    "max_queue": 8,
+    "max_rss_bytes": 650493952,
+    "max_receive_loop_seconds": 1.8841357499995866,
+    "uncommitted_risk": "SDK/memory/queue until SQLite FULL commit; restart replays available overlap",
+    "initialization_paused_for_memory": false,
+    "cpu_seconds": 115.191427584,
+    "oldest_pending_seconds": 0
+  },
+  "status": "running",
+  "backfill_helper_pid": null,
+  "backfill_pending_contracts": 0,
+  "backfill_ready_jobs": 36,
+  "backfill_waiting_import_contracts": 103,
+  "preparation_workers": 2,
+  "initialization_concurrency": 8,
+  "coverage_status": "PENDING full day and source replay verification",
+  "evidence_saved_ns": 1793614671893158000
+}

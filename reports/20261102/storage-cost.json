@@ -1,0 +1,37 @@
+{
+  "observed_ns": 1793620443396302000,
+  "workspace_logical_bytes_excluding_git": 33881821190,
+  "retained_task_temp_directories": [
+    {
+      "path": "/private/tmp/tick-github-source-4afxn__m",
+      "logical_bytes": 850772
+    },
+    {
+      "path": "/private/tmp/tick-maintenance-source-restore-8ee1baee749d47b98ded33f0fcfd1ee3",
+      "logical_bytes": 294693095
+    },
+    {
+      "path": "/private/tmp/tick-operator-restore-397167f7bf804eba86842ce3ad2ea860",
+      "logical_bytes": 106059869
+    },
+    {
+      "path": "/private/tmp/tick-parallel-full-1793615509326172000",
+      "logical_bytes": 17750907357
+    },
+    {
+      "path": "/private/tmp/tick-quality-restore-5jjwb34v",
+      "logical_bytes": 102138103
+    }
+  ],
+  "workspace_and_listed_temp_logical_bytes": 52136470386,
+  "disk_free_bytes": 71670304768,
+  "production_archives": 9,
+  "production_archive_raw_file_bytes": 18252018369,
+  "production_archive_compressed_part_bytes": 1284485103,
+  "production_archive_manifest_bytes": 491608,
+  "preserved_original_source_journals": 50,
+  "automatic_deletion": false,
+  "full_open_day_rate_and_day_month_year_cost": "PENDING",
+  "estimate_formula": "measured complete-open-day rows * observed total archive bytes/row; add shared decoder/runtime, all retained hot/staging/helper/recovery copies",
+  "note": "Actual workspace plus all extant task-prefix temp directories counted, including failed attempts, benchmarks and recovery environments. Logical bytes are not APFS allocated bytes; no deletion performed."
+}

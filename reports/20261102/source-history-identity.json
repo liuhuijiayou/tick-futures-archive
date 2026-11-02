@@ -1,0 +1,272 @@
+{
+  "observed_ns": 1793611638479531000,
+  "metadata_version": "1793611426915894000",
+  "source": "TqSdk",
+  "warnings": [
+    {
+      "symbol": "CZCE.JR701",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1467351777000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.JR703",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1462428628000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.JR705",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1473662995000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.JR709",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1486092466000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.PM611",
+      "current_delivery_year": 2026,
+      "earliest_source_event_ns": 1469587694500000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.PM701",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1465191555000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.PM705",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1477893495000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.PM707",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1473647400000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.PM709",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1493794021000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.RI611",
+      "current_delivery_year": 2026,
+      "earliest_source_event_ns": 1465787626000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.RI701",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1478067922000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.RI703",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1483498958000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.RI705",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1476685935000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.RI707",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1490160845000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.RI709",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1503882933000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.WH611",
+      "current_delivery_year": 2026,
+      "earliest_source_event_ns": 1467265222000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.WH701",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1483061725000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.WH703",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1461738221000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.WH705",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1493359251000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.WH707",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1493362772000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.WH709",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1503363708000001024,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.ZC611",
+      "current_delivery_year": 2026,
+      "earliest_source_event_ns": 1476167965000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.ZC612",
+      "current_delivery_year": 2026,
+      "earliest_source_event_ns": 1478757364000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.ZC701",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1483076233000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.ZC702",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1485151385000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.ZC703",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1486519481000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.ZC704",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1489729159000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.ZC705",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1493361909000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.ZC706",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1495608781000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.ZC707",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1493703364000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.ZC708",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1500341012000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.ZC709",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1504488668000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    },
+    {
+      "symbol": "CZCE.ZC710",
+      "current_delivery_year": 2027,
+      "earliest_source_event_ns": 1505399325000000000,
+      "current_contract_history_proven": false,
+      "original_rows_retained": true,
+      "status": "evidence_insufficient"
+    }
+  ],
+  "interpretation": "Heuristic identity audit, no automatic cleaning or fabricated listing date"
+}

@@ -1,0 +1,56 @@
+{
+  "mode": "import",
+  "started_ns": 1793613570849532000,
+  "ended_ns": 1793613577247093000,
+  "elapsed_seconds": 6.276844,
+  "preparation_workers": 2,
+  "initialization_concurrency": 4,
+  "code_root": "/Users/liuhui/tick_futures",
+  "output_root": "/Users/liuhui/tick_futures/data/derived/parallel-import-after",
+  "rows": 80000,
+  "ordered_original_raw_sha256": "ac72069b216d61655766e8d7a45fd2fd614f17409b958641451a1b1698f85c58",
+  "result": [
+    {
+      "written": 10000,
+      "seq": 10000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 20000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 30000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 40000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 50000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 60000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 70000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 80000,
+      "decision": "historical_content_replay_checked"
+    }
+  ],
+  "parent_peak_rss_bytes": 370655232,
+  "note": "Shared-host measurement; historical buffers do not prove new live quote throughput"
+}

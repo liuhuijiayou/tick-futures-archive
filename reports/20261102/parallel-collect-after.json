@@ -1,0 +1,134 @@
+{
+  "mode": "collect",
+  "started_ns": 1793613642055865000,
+  "ended_ns": 1793613651115391000,
+  "elapsed_seconds": 9.000096,
+  "preparation_workers": 2,
+  "initialization_concurrency": 8,
+  "code_root": "/Users/liuhui/tick_futures",
+  "output_root": "/Users/liuhui/tick_futures/data/derived/parallel-collect-after",
+  "rows": 24000,
+  "ordered_original_raw_sha256": "8091a0b35acaf5191d035fba250391bb3d8eaf1f4813d37242c3b7695052d3da",
+  "result": {
+    "status": "stopped",
+    "run": "596f58e359ed42cab3cac7351f3d09f6",
+    "heartbeat_ns": 1793613650987575000,
+    "pid": 63557,
+    "written": 24000,
+    "realtime_written": 0,
+    "requested": 24,
+    "failures": {},
+    "metrics": {
+      "max_queue": 0,
+      "max_rss_bytes": 284884992,
+      "max_receive_loop_seconds": 0.25355516700005865,
+      "uncommitted_risk": "SDK/memory/queue until SQLite FULL commit; restart replays available overlap",
+      "initialization_paused_for_memory": false,
+      "cpu_seconds": 1.40357728,
+      "oldest_pending_seconds": 0
+    },
+    "elapsed_seconds": 7.43080974999998,
+    "coverage_status": "PENDING full trading day",
+    "initialization_complete": true
+  },
+  "contracts": {
+    "SHFE.ad2611": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "47963e733e7c8f5bdcf20dfdf4ceb61eb97348282988b39d8ce6bd24c2c32d81"
+    },
+    "INE.bc2611": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "1d78cbd2d6bb3aa1ce03365c881cdf922ac7890b914b9cccd814250c7ead73cc"
+    },
+    "CZCE.AP611": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "bf022d48bdfe6fb4fc32953e78ff1cd6325929e094ccf0fbb029c2b62106968e"
+    },
+    "DCE.a2611": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "c4b42992658b514a3eacfaf3007497e9e08beccc4dd5f60390d0eac18f853a90"
+    },
+    "GFEX.lc2611": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "039843fc5346abbf83c5ac40926b8d9908f9de674aa5847a872f4aca0b9de6b8"
+    },
+    "CFFEX.IC2611": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "31c489769ffedac5930d2e3f0412dc837bfeb0d8da6e3378f3edb0b0da0d5552"
+    },
+    "CZCE.AP612": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "39282049e03eb924ec346f3a0504ae1c6c5edf0feda8f4381f4d2cb6bd9d6514"
+    },
+    "SHFE.ad2612": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "5ed9f0143e42a6963b23484dd57848cb6a8dc3ec34c6e452f60aa9536f8efc0a"
+    },
+    "INE.bc2612": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "9a89b4f00f7198c520ab0646c4985d890f8cddb20d4c3d0a23edba0293558c6b"
+    },
+    "CFFEX.IC2612": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "750d609d2dc5d6cf8e5b179c671d646f06711148ef1c8b369d23da177941dc3e"
+    },
+    "DCE.a2701": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "7a16611e820dc3b75b6ad1812014c5ea46d5f9df9e772f7ba8305d3afbeef4d3"
+    },
+    "DCE.a2703": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "6bae46c587ff900486114e74de6bd48f6bd57892f09167f22fe34880edc2b8b3"
+    },
+    "CZCE.AP701": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "79cb2e1b0d548bbaaa64d4af3340ea62bb26d52b7f6c2534fec49b0b75f4a577"
+    },
+    "SHFE.ad2701": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "0680945b19fda78c9cb30ff2fd4e95bba46bf5dfe8c13a3bdf2ebc88cbf6d777"
+    },
+    "INE.bc2701": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "536e814f23fc8c9021789dbeebe8e4262f9b00f08cb8bb67b528190c3a1f93e5"
+    },
+    "GFEX.lc2612": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "2b2fc736cd9be29ccfe4545718beb6acf175794ef7a308d9c2b631dbea85b43e"
+    },
+    "CFFEX.IC2703": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "1683dad8c9f5d3309ad152b2cc77407dbfbca64b563e0a9da6d8539c24f708d4"
+    },
+    "INE.bc2702": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "350f7125c1170ee666509592826769b3de13fd2b0ea2313e267ea092bcf72292"
+    },
+    "SHFE.ad2702": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "8edfc904beb695af1e1079f652e6f56bdf6a98d97452e236353340912ef7f0e1"
+    },
+    "DCE.a2705": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "37e97a0d230a2567e297170966c539afdb6f0d96e468b0423438624fbcee25c9"
+    },
+    "CZCE.AP703": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "d172da25a58928b6f9f54d8aacafdea1dfb694c446473f93807ac3f313d68eba"
+    },
+    "GFEX.lc2701": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "6798ba66285dba17feb17e458d8e57dc74b99ef631cb16ad3f5d0af927c5521e"
+    },
+    "CFFEX.IC2706": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "28707e650a69806bee1f1784f112d74d71e2b96d0fddba42716ae77abc5aaf65"
+    },
+    "GFEX.lc2702": {
+      "rows": 1000,
+      "ordered_original_raw_sha256": "dd3fa3c53a3e90a1ae43113ecd739f056caeb061fc1a66755f1381f7d4c113ab"
+    }
+  },
+  "parent_peak_rss_bytes": 441139200,
+  "note": "Shared-host measurement; historical buffers do not prove new live quote throughput"
+}

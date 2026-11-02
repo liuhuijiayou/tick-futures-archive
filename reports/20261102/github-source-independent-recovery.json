@@ -1,0 +1,56 @@
+{
+  "started_ns": 1793617894565898000,
+  "ended_ns": 1793617960079980000,
+  "exit_code": 0,
+  "independent_root": "/private/tmp/tick-github-source-4afxn__m",
+  "data_kind": "synthetic_fixture_only",
+  "code_commit": "6c2921f30a0834e437eedde68ef082679c31b6a4",
+  "runtime_report": {
+    "status": "github_only_isolated_recovery_passed",
+    "runtime_tag": "decoder-runtime-v1",
+    "wheel_bytes": 16505168,
+    "wheels_downloaded": 6,
+    "pip_network_or_cache_used": false,
+    "production_directory_or_environment_used": false,
+    "journal_verification": {
+      "status": "all_journals_verified",
+      "journals": 1,
+      "rows": 3,
+      "original_source_journals": 1,
+      "preserved_source_rows": 3,
+      "note": "Source rows are preserved delivery evidence, not additional unique market Ticks"
+    }
+  },
+  "restore_report": {
+    "archive_id": "b9d00dcb08b44882ae8974110588cffa",
+    "status": "all_original_bytes_match",
+    "files": [
+      {
+        "path": "journal/journal.sqlite3",
+        "bytes": 65536,
+        "sha256": "1adf56d71640035dfb44b07087dfe36c5ae0110753d6f934a9e566b216b00b89"
+      },
+      {
+        "path": "quality/record-values.json",
+        "bytes": 545,
+        "sha256": "21a32640acf6957e9de700f0c2d4436776398159b3190a69c73a7b17f89e2371"
+      },
+      {
+        "path": "backfill-jobs/fixture/journal.sqlite3",
+        "bytes": 57344,
+        "sha256": "e8b43081e2d733a11aa71003af71ed4bcc8ec54eaf65e577201bfd181aab154a"
+      },
+      {
+        "path": "backfill-jobs/fixture/completed.json",
+        "bytes": 247,
+        "sha256": "f59855d7c7c445b49c9b2675cefa26a496958792516e5008cf9e48339a01d15e"
+      }
+    ],
+    "collection_integrity": "evidence_insufficient",
+    "remote_restore": true,
+    "repo": "liuhuijiayou/tick-futures-archive",
+    "tag": "synthetic-source-journal-20261102",
+    "downloaded_assets": 6,
+    "production_data_or_cache_used": false
+  }
+}

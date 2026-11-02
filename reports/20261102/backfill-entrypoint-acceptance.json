@@ -1,0 +1,32 @@
+{
+  "observed_ns": 1793619029483600000,
+  "managed_root": true,
+  "requests": [
+    {
+      "path": "data/derived/market/requests/backfill-7bca30467e1548b7bfa9012d14402d0e.json",
+      "request": {
+        "status": "completed",
+        "requested_ns": 1793618162211933000,
+        "symbols": [
+          "SHFE.au2612"
+        ],
+        "rows": 10000,
+        "requested_symbols": [
+          "SHFE.au2612"
+        ],
+        "remaining_symbols": [],
+        "rejected": [],
+        "results": {
+          "SHFE.au2612": {
+            "written": 0,
+            "seq": 1328883,
+            "decision": "historical_content_replay_checked"
+          }
+        },
+        "note": "Source window operation state; market coverage is audited separately"
+      }
+    }
+  ],
+  "prior_startup_race": "Observed standalone fallback before managed-root queue guard; fixed and covered by regression test",
+  "coverage_is_independent": true
+}

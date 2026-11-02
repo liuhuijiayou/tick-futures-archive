@@ -1,0 +1,23 @@
+{
+  "format": "tfcomplete-1",
+  "archive_id": "f2c26538d36a445cba9268cee6c28f41",
+  "repo": "liuhuijiayou/tick-futures-archive",
+  "tag": "synthetic-chain-audit-20261102",
+  "manifest_name": "manifest-f2c26538d36a445cba9268cee6c28f41.json",
+  "manifest_sha256": "eeac3ae14ebddbd89648db960d01bb94d369134a8f51be54b8b2fd7615b2a236",
+  "assets": [
+    {
+      "name": "part-000000-789d810313d5a0aa4ede3ce0.zstd",
+      "id": 701165263,
+      "size": 1368,
+      "sha256": "789d810313d5a0aa4ede3ce01adc676d057944f7c5b2189a0f4cb2965d4344e2",
+      "download_decode_verified": true
+    }
+  ],
+  "collection_integrity": "evidence_insufficient",
+  "archive_integrity": "all_assets_downloaded_and_decoded_verified",
+  "parent_tag": "synthetic-chain-delta-20261102",
+  "uploaded_this_attempt": 3,
+  "downloaded_decoded_parts": 1,
+  "release_url": "https://github.com/liuhuijiayou/tick-futures-archive/releases/tag/synthetic-chain-audit-20261102"
+}

@@ -1,0 +1,21 @@
+{
+  "source": "actual same-account TqSim windows; shared host measurements",
+  "import_rows": 80000,
+  "import_before_seconds": 20.389204,
+  "import_after_seconds": 5.562191,
+  "import_speedup": 3.6656785069049227,
+  "import_ordered_raw_sha256_match": true,
+  "subscription_contracts": 24,
+  "subscription_rows_each": 24000,
+  "subscription_before_seconds": 11.198282,
+  "subscription_after_seconds": 9.000096,
+  "subscription_speedup": 1.2442402836591968,
+  "subscription_contract_raw_sequences_match": true,
+  "concurrency": {
+    "sdk_initializations": 8,
+    "cpu_preparation_processes": 2,
+    "transactional_writers": 1,
+    "cold_preparation_inflight_limit": 2
+  },
+  "open_market_peak_throughput_acceptance": "PENDING"
+}

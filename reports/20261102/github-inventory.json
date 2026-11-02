@@ -1,0 +1,58 @@
+{
+  "observed_ns": 1793619512892510000,
+  "repo": "liuhuijiayou/tick-futures-archive",
+  "releases": [
+    {
+      "tag": "synthetic-source-journal-20261102",
+      "published": true,
+      "assets": 6,
+      "bytes": 11191,
+      "data_kind": "synthetic_fixture_only"
+    },
+    {
+      "tag": "synthetic-interrupted-20261102",
+      "published": true,
+      "assets": 5,
+      "bytes": 94979,
+      "data_kind": "synthetic_fixture_only"
+    },
+    {
+      "tag": "synthetic-chain-delta-20261102",
+      "published": true,
+      "assets": 3,
+      "bytes": 6303,
+      "data_kind": "synthetic_fixture_only"
+    },
+    {
+      "tag": "synthetic-chain-base-20261102",
+      "published": true,
+      "assets": 5,
+      "bytes": 95421,
+      "data_kind": "synthetic_fixture_only"
+    },
+    {
+      "tag": "synthetic-chain-audit-20261102",
+      "published": true,
+      "assets": 3,
+      "bytes": 5800,
+      "data_kind": "synthetic_fixture_only"
+    },
+    {
+      "tag": "synthetic-acceptance-20261102",
+      "published": true,
+      "assets": 5,
+      "bytes": 94834,
+      "data_kind": "synthetic_fixture_only"
+    },
+    {
+      "tag": "decoder-runtime-v1",
+      "published": true,
+      "assets": 8,
+      "bytes": 47662363,
+      "data_kind": "public_software_dependencies"
+    }
+  ],
+  "assets": 35,
+  "total_asset_bytes": 47970891,
+  "market_data_assets": 0
+}

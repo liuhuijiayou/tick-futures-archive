@@ -1,0 +1,8 @@
+{
+  "started_ns": 1793611685272649000,
+  "ended_ns": 1793611686907717000,
+  "exit_code": 1,
+  "stderr": "{\"status\": \"failed\", \"error_type\": \"RuntimeError\", \"message\": \"Instance already running: collector.lock\"}\n",
+  "expected": "nonzero: project collector lock prevents a duplicate process before authentication",
+  "passed": true
+}

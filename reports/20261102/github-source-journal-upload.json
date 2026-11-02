@@ -1,0 +1,43 @@
+{
+  "format": "tfcomplete-1",
+  "archive_id": "b9d00dcb08b44882ae8974110588cffa",
+  "repo": "liuhuijiayou/tick-futures-archive",
+  "tag": "synthetic-source-journal-20261102",
+  "manifest_name": "manifest-b9d00dcb08b44882ae8974110588cffa.json",
+  "manifest_sha256": "b59353b7cba2a45fc6e80cec9e868cbc370c10a585b661a4fb87f425448d190c",
+  "assets": [
+    {
+      "name": "part-000000-903ce9ba670d66eb75426471.zstd",
+      "id": 701422891,
+      "size": 1642,
+      "sha256": "903ce9ba670d66eb754264719350e17f8250005e1e9f1148486bc6cb5245936e",
+      "download_decode_verified": true
+    },
+    {
+      "name": "part-000001-c919049f049479bfc7764a4c.zstd",
+      "id": 701423091,
+      "size": 299,
+      "sha256": "c919049f049479bfc7764a4c2e49dc9660edfe6d784b5324d2d0219c2333b23b",
+      "download_decode_verified": true
+    },
+    {
+      "name": "part-000002-6c9ddaf713862baba9e55cba.zstd",
+      "id": 701423294,
+      "size": 1544,
+      "sha256": "6c9ddaf713862baba9e55cba0b74c6c504bcd6c57e4e3df098054db2fc7d5ae1",
+      "download_decode_verified": true
+    },
+    {
+      "name": "part-000003-d4785b7b6a76f5597da8fa26.zstd",
+      "id": 701423450,
+      "size": 198,
+      "sha256": "d4785b7b6a76f5597da8fa26744f59ef4c0020af817da8a3fcc033711130f2f6",
+      "download_decode_verified": true
+    }
+  ],
+  "collection_integrity": "evidence_insufficient",
+  "archive_integrity": "all_assets_downloaded_and_decoded_verified",
+  "uploaded_this_attempt": 6,
+  "downloaded_decoded_parts": 4,
+  "release_url": "https://github.com/liuhuijiayou/tick-futures-archive/releases/tag/synthetic-source-journal-20261102"
+}

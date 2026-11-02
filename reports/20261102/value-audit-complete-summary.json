@@ -1,0 +1,355 @@
+{
+  "format": "tfcoverage-1",
+  "generated_ns": 1793615769245495000,
+  "collection_integrity": "evidence_insufficient",
+  "archive_integrity": "separate manifest/remote receipt required",
+  "expected_contracts": 870,
+  "subscription_states": {
+    "subscribed": 870
+  },
+  "persisted_contracts": 870,
+  "persisted_rows": 3858760,
+  "origins": {
+    "initial_backfill": 1392877,
+    "realtime_update": 12034,
+    "recovery_backfill": 2453849
+  },
+  "gap_states": {
+    "evidence_insufficient": 5,
+    "window_verified": 883,
+    "gap_pending_replay": 1
+  },
+  "contracts_with_unverified_prefix": 0,
+  "source_history_identity_warnings": [
+    {
+      "symbol": "CZCE.JR701",
+      "earliest_source_event_ns": 1467351777000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.JR703",
+      "earliest_source_event_ns": 1462428628000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.JR705",
+      "earliest_source_event_ns": 1473662995000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.JR709",
+      "earliest_source_event_ns": 1486092466000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.PM611",
+      "earliest_source_event_ns": 1469587694500000000,
+      "current_delivery_year": 2026,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.PM701",
+      "earliest_source_event_ns": 1465191555000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.PM705",
+      "earliest_source_event_ns": 1477893495000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.PM707",
+      "earliest_source_event_ns": 1473647400000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.PM709",
+      "earliest_source_event_ns": 1493794021000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.RI611",
+      "earliest_source_event_ns": 1465787626000000000,
+      "current_delivery_year": 2026,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.RI701",
+      "earliest_source_event_ns": 1478067922000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.RI703",
+      "earliest_source_event_ns": 1483498958000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.RI705",
+      "earliest_source_event_ns": 1476685935000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.RI707",
+      "earliest_source_event_ns": 1490160845000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.RI709",
+      "earliest_source_event_ns": 1503882933000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.WH611",
+      "earliest_source_event_ns": 1467265222000000000,
+      "current_delivery_year": 2026,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.WH701",
+      "earliest_source_event_ns": 1483061725000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.WH703",
+      "earliest_source_event_ns": 1461738221000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.WH705",
+      "earliest_source_event_ns": 1493359251000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.WH707",
+      "earliest_source_event_ns": 1493362772000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.WH709",
+      "earliest_source_event_ns": 1503363708000001024,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.ZC611",
+      "earliest_source_event_ns": 1476167965000000000,
+      "current_delivery_year": 2026,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.ZC612",
+      "earliest_source_event_ns": 1478757364000000000,
+      "current_delivery_year": 2026,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.ZC701",
+      "earliest_source_event_ns": 1483076233000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.ZC702",
+      "earliest_source_event_ns": 1485151385000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.ZC703",
+      "earliest_source_event_ns": 1486519481000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.ZC704",
+      "earliest_source_event_ns": 1489729159000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.ZC705",
+      "earliest_source_event_ns": 1493361909000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.ZC706",
+      "earliest_source_event_ns": 1495608781000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.ZC707",
+      "earliest_source_event_ns": 1493703364000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.ZC708",
+      "earliest_source_event_ns": 1500341012000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.ZC709",
+      "earliest_source_event_ns": 1504488668000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    },
+    {
+      "symbol": "CZCE.ZC710",
+      "earliest_source_event_ns": 1505399325000000000,
+      "current_delivery_year": 2027,
+      "status": "evidence_insufficient",
+      "reason": "source history predates current delivery year by >=5 years; symbol reuse/lifetime unresolved",
+      "original_rows_retained": true,
+      "earliest_for_current_contract_proven": false
+    }
+  ],
+  "pair_flags": {
+    "volume_decreased": 260,
+    "amount_decreased": 597,
+    "sdk_id_discontinuity_evidence_only": 2451,
+    "reverse_timestamp": 62,
+    "id_reset_revision_or_reorder": 62
+  },
+  "field_flags": {
+    "ask_price1:nan": 12076,
+    "bid_price1:nan": 12005,
+    "ask_price2:nan": 2217142,
+    "bid_price2:nan": 2217045,
+    "ask_price3:nan": 2218156,
+    "bid_price3:nan": 2217703,
+    "ask_price4:nan": 2220253,
+    "bid_price4:nan": 2222487,
+    "ask_price5:nan": 2225688,
+    "bid_price5:nan": 2229592,
+    "depth_1:invalid_or_absent_values": 14208,
+    "depth_2:invalid_or_absent_values": 2217191,
+    "depth_3:invalid_or_absent_values": 2218633,
+    "depth_4:invalid_or_absent_values": 2224186,
+    "depth_5:invalid_or_absent_values": 2231513,
+    "last_price:nan": 178181,
+    "average:nan": 177587,
+    "highest:nan": 178280,
+    "lowest:nan": 178280
+  },
+  "value_scan_performed": true,
+  "upstream_zero_loss_proven": false,
+  "complete_day_night_acceptance": "PENDING",
+  "started_ns": 1793615511901335000,
+  "ledger_rows": 12746
+}

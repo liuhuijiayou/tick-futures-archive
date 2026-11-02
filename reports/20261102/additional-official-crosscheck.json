@@ -1,0 +1,47 @@
+{
+  "results": [
+    {
+      "exchange": "CZCE",
+      "url": "https://www.czce.com.cn/cn/DFSStaticFiles/Future/2026/20261102/FutureDataDaily.txt",
+      "observed_ns": 1793611770485083000,
+      "status": "same-day official daily publication set compared; independent full listing still PENDING",
+      "http_status": 200,
+      "bytes": 38519,
+      "sha256": "62d8ea21e8f8a4e8baabae15e3f32c212b14c7681d12c03d50060940ad5e2508",
+      "local_file": "data/derived/exchange-crosscheck/CZCE-public-reference-20261102.bin",
+      "content_type": "text/plain; charset=utf-8",
+      "note": "Daily publication presence is evidence; absence alone cannot prove a contract is not listed.",
+      "daily_publication_count": 243,
+      "vendor_count": 243,
+      "missing_from_vendor": [],
+      "vendor_not_in_daily_publication": [],
+      "daily_publication_set_match": true
+    },
+    {
+      "exchange": "CFFEX",
+      "url": "https://www.cffex.com.cn/sj/hqsj/rtj/202611/02/20261102_1.csv",
+      "observed_ns": 1793611770485367000,
+      "status": "PENDING independent listing crosscheck",
+      "error_type": "ConnectTimeout",
+      "message": "HTTPSConnectionPool(host='www.cffex.com.cn', port=443): Max retries exceeded with url: /sj/hqsj/rtj/202611/02/20261102_1.csv (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x11a2c8ad0>, 'Connection to www.cffex.com.cn timed out. (connect timeout=4)'))"
+    },
+    {
+      "exchange": "DCE",
+      "url": "https://www.dce.com.cn/publicweb/quotesdata/dayQuotesCh.html",
+      "observed_ns": 1793611770485519000,
+      "status": "PENDING independent listing crosscheck",
+      "error_type": "ConnectTimeout",
+      "message": "HTTPSConnectionPool(host='www.dce.com.cn', port=443): Max retries exceeded with url: /publicweb/quotesdata/dayQuotesCh.html (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0x11a2cd950>, 'Connection to www.dce.com.cn timed out. (connect timeout=4)'))"
+    },
+    {
+      "exchange": "GFEX",
+      "url": "https://www.gfex.com.cn/gfex/hyxx/ywcs.shtml",
+      "observed_ns": 1793611770485643000,
+      "status": "PENDING independent listing crosscheck",
+      "error_type": "SSLError",
+      "message": "HTTPSConnectionPool(host='www.gfex.com.cn', port=443): Max retries exceeded with url: /gfex/hyxx/ywcs.shtml (Caused by SSLError(SSLCertVerificationError(1, \"[SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Hostname mismatch, certificate is not valid for 'www.gfex.com.cn'. (_ssl.c:1032)\")))"
+    }
+  ],
+  "source": "official exchange domains only",
+  "independent_full_listing_status": "PENDING for these four exchanges"
+}

@@ -1,0 +1,82 @@
+{
+  "started_ns": 1793611118556064000,
+  "ended_ns": 1793611185502314000,
+  "clone_exit_code": 0,
+  "restore_exit_code": 0,
+  "independent_root": "/private/tmp/tick-github-audit-vfhpq1t4",
+  "data_kind": "synthetic_fixture_only",
+  "code_commit": "45438abf5a82ab3c7d57e127e409d5c690350ce2",
+  "runtime_report": {
+    "status": "github_only_isolated_recovery_passed",
+    "runtime_tag": "decoder-runtime-v1",
+    "wheel_bytes": 16505168,
+    "wheels_downloaded": 6,
+    "pip_network_or_cache_used": false,
+    "production_directory_or_environment_used": false,
+    "journal_verification": {
+      "status": "all_journals_verified",
+      "journals": 3,
+      "rows": 805
+    }
+  },
+  "restore_report": {
+    "status": "all_parent_archives_and_original_bytes_verified",
+    "archive_order": [
+      "e23b299363474785956f8728aef280fa",
+      "39b9e9f03ac2450b9a38fd723c41c559",
+      "f2c26538d36a445cba9268cee6c28f41"
+    ],
+    "rows": 805,
+    "archives": [
+      {
+        "archive_id": "e23b299363474785956f8728aef280fa",
+        "status": "all_original_bytes_match",
+        "files": [
+          {
+            "path": "journal/journal.sqlite3",
+            "bytes": 655360,
+            "sha256": "a0254c9ae701c7f08de8709b1e94c13eaf3a2f20b552a3dbab18430f60aff10f"
+          }
+        ],
+        "collection_integrity": "evidence_insufficient",
+        "remote_restore": false
+      },
+      {
+        "archive_id": "39b9e9f03ac2450b9a38fd723c41c559",
+        "status": "all_original_bytes_match",
+        "files": [
+          {
+            "path": "journal/journal.sqlite3",
+            "bytes": 57344,
+            "sha256": "6624f22d0a72ff9c077cd8bc35ed1c23d3b0f6d552dcb58b186205c02d420a90"
+          }
+        ],
+        "collection_integrity": "evidence_insufficient",
+        "remote_restore": false
+      },
+      {
+        "archive_id": "f2c26538d36a445cba9268cee6c28f41",
+        "status": "all_original_bytes_match",
+        "files": [
+          {
+            "path": "journal/journal.sqlite3",
+            "bytes": 65536,
+            "sha256": "e308830a4664e413875e83a9bd7048e944a685e7b9df76c35259fe89f46171e6"
+          }
+        ],
+        "collection_integrity": "evidence_insufficient",
+        "remote_restore": false
+      }
+    ],
+    "collection_integrity": [
+      "evidence_insufficient",
+      "evidence_insufficient",
+      "evidence_insufficient"
+    ],
+    "remote_restore": true,
+    "repo": "liuhuijiayou/tick-futures-archive",
+    "tag": "synthetic-chain-audit-20261102",
+    "downloaded_assets": 11,
+    "production_data_or_cache_used": false
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "mode": "import",
+  "started_ns": 1793613960179249000,
+  "ended_ns": 1793613965919094000,
+  "elapsed_seconds": 5.562191,
+  "preparation_workers": 2,
+  "initialization_concurrency": 4,
+  "code_root": "/Users/liuhui/tick_futures",
+  "output_root": "/Users/liuhui/tick_futures/data/derived/parallel-import-final",
+  "source_tree_sha256": "8a2f89930e714a7e93ebcc7ab45200691fb382dd4aa427ebb833c53e7f56f8ae",
+  "rows": 80000,
+  "ordered_original_raw_sha256": "ac72069b216d61655766e8d7a45fd2fd614f17409b958641451a1b1698f85c58",
+  "result": [
+    {
+      "written": 10000,
+      "seq": 10000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 20000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 30000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 40000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 50000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 60000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 70000,
+      "decision": "historical_content_replay_checked"
+    },
+    {
+      "written": 10000,
+      "seq": 80000,
+      "decision": "historical_content_replay_checked"
+    }
+  ],
+  "contracts": {
+    "SHFE.fu2711": {
+      "rows": 10000,
+      "ordered_original_raw_sha256": "442cc17f35befa7aafbed623301df0cf8215a7f3d36752f7bb99ea4198cd4a85"
+    },
+    "CZCE.PR702": {
+      "rows": 10000,
+      "ordered_original_raw_sha256": "3c3c8ddab29d8b7477476b8f25657a1953d2c5069dee0c552ebc12840f86ca6e"
+    },
+    "SHFE.hc2612": {
+      "rows": 10000,
+      "ordered_original_raw_sha256": "bc26468b799134e595cd430a6fb4cddbb4888f9a3c35f4fcb181030cf4afd921"
+    },
+    "DCE.jd2612": {
+      "rows": 10000,
+      "ordered_original_raw_sha256": "7148d8fd55a3f3e7c756c87b6b00583126a0dda9449b37ffee453a51c77b18fd"
+    },
+    "DCE.jd2701": {
+      "rows": 10000,
+      "ordered_original_raw_sha256": "89c3d9ac846a0a98eb886f4f63d7238f431351918b2dac4aa8bec4e6f9609f87"
+    },
+    "SHFE.hc2701": {
+      "rows": 10000,
+      "ordered_original_raw_sha256": "d1ef292839a5c5fbd7c485d6201fb72a5a6e173f725200deac87d06846fa53f3"
+    },
+    "DCE.jd2702": {
+      "rows": 10000,
+      "ordered_original_raw_sha256": "661fbef0959a6fd80412292305cf332d2fbd4dbf5feb17956a4c7d8a1e528805"
+    },
+    "SHFE.hc2703": {
+      "rows": 10000,
+      "ordered_original_raw_sha256": "653b8ac6c8bdb8f839f6c9f1d3141f0e8c383a08528334302a9335c08c0bee02"
+    }
+  },
+  "parent_peak_rss_bytes": 414089216,
+  "note": "Shared-host measurement; historical buffers do not prove new live quote throughput"
+}

@@ -1,0 +1,31 @@
+{
+  "observed_ns": 1793620351418217000,
+  "validated_parent_order": [
+    "6796709aae0a481b86edb0262f94b1b3",
+    "36a70447f7b2426b9be06ca6c7a40fd2",
+    "1983d8f540c94e4abe209fb8544de603",
+    "3cacc209bf9a4fdc984237408fd7bd45",
+    "8f2d7c17f3c9486abd4ebfaa282ca879",
+    "614dfff932af4ac29b388c7ad457278e",
+    "523290d0f8584441945d730e2bee3c15",
+    "8ee1baee749d47b98ded33f0fcfd1ee3",
+    "397167f7bf804eba86842ce3ad2ea860"
+  ],
+  "archives": 9,
+  "main_records": 3858760,
+  "original_source_journals": 50,
+  "preserved_source_rows": 3770000,
+  "sqlite_journals_byte_type_bit_verified": 59,
+  "main_records_and_source_copies_counted_separately": true,
+  "full_six_archive_empty_directory_report": "parallel-full-local-recovery.json",
+  "later_independent_incremental_reports": [
+    "automatic-quality-archive.json",
+    "maintenance-source-local-recovery.json",
+    "operator-final-archive.json"
+  ],
+  "original_files_sha256": "all_match",
+  "recovery_layout": "Six-archive full restore plus three independently restored incrementals in separate empty directories; parent continuity validated across all nine",
+  "production_directory_or_original_CSV_fallback_used": false,
+  "remote_restore": false,
+  "collection_integrity": "evidence_insufficient"
+}

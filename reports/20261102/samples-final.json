@@ -1,0 +1,7 @@
+{
+  "started_ns": 1793610598083609000,
+  "ended_ns": 1793610598722343000,
+  "exit_code": 0,
+  "stdout": "{\n  \"verified_files\": 71,\n  \"tick_rows\": 90000,\n  \"source_bytes\": 21438320,\n  \"stored_bytes\": 2424461,\n  \"status\": \"all_original_content_hashes_match\"\n}\n",
+  "stderr": ""
+}

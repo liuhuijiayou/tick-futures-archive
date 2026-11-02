@@ -1,0 +1,140 @@
+{
+  "observed_ns": 1793620406922095000,
+  "implementation_commit": "df25aefdead9c882338abd50dbd00f64b15cc126",
+  "implementation_commits": 13,
+  "latest_tests": {
+    "passed": 59,
+    "failed": 0,
+    "errors": 0,
+    "report": "tests-final.json"
+  },
+  "baseline": {
+    "tests_passed": 12,
+    "original_files_sha_verified": 71,
+    "tick_rows": 90000
+  },
+  "real_market": {
+    "production_runs_including_upgrades_and_failed_start": 12,
+    "helper_source_jobs": 50,
+    "helper_incomplete_jobs": 1,
+    "helper_record_deliveries_including_overlap": 3770000,
+    "production_main_records": 3858760,
+    "controlled_open_smoke_runs": 1,
+    "smoke_rows_including_initial": 60323,
+    "smoke_proven_post_initial_events": 323,
+    "smoke_contracts": 6,
+    "subscription_speed_probe_runs": 2,
+    "rows_each_probe": 24000,
+    "complete_day_night_acceptance": "PENDING"
+  },
+  "parallel_measurement": {
+    "source": "actual same-account TqSim windows; shared host measurements",
+    "import_rows": 80000,
+    "import_before_seconds": 20.389204,
+    "import_after_seconds": 5.562191,
+    "import_speedup": 3.6656785069049227,
+    "import_ordered_raw_sha256_match": true,
+    "subscription_contracts": 24,
+    "subscription_rows_each": 24000,
+    "subscription_before_seconds": 11.198282,
+    "subscription_after_seconds": 9.000096,
+    "subscription_speedup": 1.2442402836591968,
+    "subscription_contract_raw_sequences_match": true,
+    "concurrency": {
+      "sdk_initializations": 8,
+      "cpu_preparation_processes": 2,
+      "transactional_writers": 1,
+      "cold_preparation_inflight_limit": 2
+    },
+    "open_market_peak_throughput_acceptance": "PENDING"
+  },
+  "compression_configurations": 8,
+  "compression_corpus_files": 80,
+  "local_recovery": {
+    "observed_ns": 1793620351418217000,
+    "validated_parent_order": [
+      "6796709aae0a481b86edb0262f94b1b3",
+      "36a70447f7b2426b9be06ca6c7a40fd2",
+      "1983d8f540c94e4abe209fb8544de603",
+      "3cacc209bf9a4fdc984237408fd7bd45",
+      "8f2d7c17f3c9486abd4ebfaa282ca879",
+      "614dfff932af4ac29b388c7ad457278e",
+      "523290d0f8584441945d730e2bee3c15",
+      "8ee1baee749d47b98ded33f0fcfd1ee3",
+      "397167f7bf804eba86842ce3ad2ea860"
+    ],
+    "archives": 9,
+    "main_records": 3858760,
+    "original_source_journals": 50,
+    "preserved_source_rows": 3770000,
+    "sqlite_journals_byte_type_bit_verified": 59,
+    "main_records_and_source_copies_counted_separately": true,
+    "full_six_archive_empty_directory_report": "parallel-full-local-recovery.json",
+    "later_independent_incremental_reports": [
+      "automatic-quality-archive.json",
+      "maintenance-source-local-recovery.json",
+      "operator-final-archive.json"
+    ],
+    "original_files_sha256": "all_match",
+    "recovery_layout": "Six-archive full restore plus three independently restored incrementals in separate empty directories; parent continuity validated across all nine",
+    "production_directory_or_original_CSV_fallback_used": false,
+    "remote_restore": false,
+    "collection_integrity": "evidence_insufficient"
+  },
+  "github": {
+    "published_synthetic_archive_batches": 6,
+    "published_software_runtime_batches": 1,
+    "actual_release_assets": 35,
+    "asset_bytes": 47970891,
+    "independent_fresh_clone_venv_synthetic_recoveries": 4,
+    "real_market_uploads": 0,
+    "real_market_remote_recoveries": 0,
+    "actual_interrupted_upload_resumed": 1,
+    "market_rights_status": "PENDING"
+  },
+  "schedule": {
+    "collector_live_pid": 73015,
+    "collector_alive": true,
+    "confirmed_subscriptions": 870,
+    "queue": 0,
+    "pending": 0,
+    "backfill_waiting_import_contracts": 0,
+    "loaded_receiver_commit": "6c2921f30a0834e437eedde68ef082679c31b6a4",
+    "next_restart_commit": "df25aef",
+    "why_not_restarted_again": "Retain healthy live connection; later changes only managed CLI/startup error guard."
+  },
+  "direct_purchase_cloud_subscription_spend": 0,
+  "human_work_hours_claimed": null,
+  "full_goal_status": "PENDING full open day/night and licensed real market GitHub round trip",
+  "key_changed_or_added_files": [
+    "tick_futures/collector.py",
+    "tick_futures/preparation.py",
+    "tick_futures/operations.py",
+    "tick_futures/store.py",
+    "tick_futures/source.py",
+    "tick_futures/probe_stream.py",
+    "tick_futures/batch_probe.py",
+    "tick_futures/codec.py",
+    "tick_futures/archive.py",
+    "tick_futures/audit.py",
+    "tick_futures/github.py",
+    "tick_futures/overview.py",
+    "tick_futures/sessions.py",
+    "tick_futures/schedule.py",
+    "scripts/recover_github.py",
+    "schema/tfrec-1.json",
+    "tests/",
+    "README.md",
+    "AGENTS.md",
+    "PROJECT_CONTEXT.md",
+    "docs/",
+    "reports/20261102/"
+  ],
+  "prepublication_index_scan": {
+    "files_scanned": 104,
+    "credential_literal_matches": 0,
+    "raw_or_private_paths": 0,
+    "method": "Exact known credential literals from AST-only loader; full staged Git index scanned; no literal values logged"
+  },
+  "tested_code_worktree_matches_implementation_commit": true
+}

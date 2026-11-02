@@ -1,0 +1,50 @@
+{
+  "six_market_updates": [
+    {
+      "symbol": "CFFEX.IF2612",
+      "window_update_records": 51,
+      "events_after_initial_window_max": 51,
+      "first_ns": 1793601550500000000,
+      "last_ns": 1793601579500000000
+    },
+    {
+      "symbol": "CZCE.MA701",
+      "window_update_records": 64,
+      "events_after_initial_window_max": 64,
+      "first_ns": 1793601547000000000,
+      "last_ns": 1793601578000001024
+    },
+    {
+      "symbol": "DCE.m2701",
+      "window_update_records": 61,
+      "events_after_initial_window_max": 61,
+      "first_ns": 1793601547222000128,
+      "last_ns": 1793601579222000128
+    },
+    {
+      "symbol": "GFEX.si2612",
+      "window_update_records": 21,
+      "events_after_initial_window_max": 21,
+      "first_ns": 1793601552864999936,
+      "last_ns": 1793601578364000000
+    },
+    {
+      "symbol": "INE.sc2612",
+      "window_update_records": 60,
+      "events_after_initial_window_max": 60,
+      "first_ns": 1793601545000000000,
+      "last_ns": 1793601579500000000
+    },
+    {
+      "symbol": "SHFE.au2612",
+      "window_update_records": 66,
+      "events_after_initial_window_max": 66,
+      "first_ns": 1793601543500000000,
+      "last_ns": 1793601579500000000
+    }
+  ],
+  "confirmed_after_initial_max_total": 323,
+  "legacy_MA_amount_decreases": 4,
+  "legacy_file_sha256": "8c32149e8a0dbd4a02918632db4ed1a7e9e24d852a51e4de1bbeaf3fffd7b6dc",
+  "original_values_modified": false
+}

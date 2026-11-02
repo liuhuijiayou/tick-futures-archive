@@ -1,0 +1,53 @@
+{
+  "observed_ns": 1793615159464693000,
+  "heartbeat": {
+    "run": "7192af75bf934afe8a935f52745ad37c",
+    "pid": 96697,
+    "heartbeat_ns": 1793615158042359000,
+    "started_ns": 1793614871257357000,
+    "source": "TqSdk",
+    "account_mode": "TqSim",
+    "universe_count": 870,
+    "requested_count": 870,
+    "created_subscriptions": 870,
+    "ready_subscriptions": 870,
+    "confirmed_empty_subscriptions": 0,
+    "remaining_subscriptions": 0,
+    "failures": {},
+    "written_this_run": 926962,
+    "realtime_written_this_run": 0,
+    "queue": 0,
+    "pending": 0,
+    "reconnects": 0,
+    "metrics": {
+      "max_queue": 1,
+      "max_rss_bytes": 3119235072,
+      "max_receive_loop_seconds": 0.9992360830001417,
+      "uncommitted_risk": "SDK/memory/queue until SQLite FULL commit; restart replays available overlap",
+      "initialization_paused_for_memory": false,
+      "cpu_seconds": 140.007950336,
+      "oldest_pending_seconds": 0
+    },
+    "status": "running",
+    "backfill_helper_pid": 4025,
+    "backfill_pending_contracts": 87,
+    "backfill_ready_jobs": 0,
+    "backfill_waiting_import_contracts": 0,
+    "preparation_workers": 2,
+    "initialization_concurrency": 4,
+    "coverage_status": "PENDING full day and source replay verification"
+  },
+  "service_config_without_auth_path": {
+    "data_length": 1000,
+    "preparation_workers": 2,
+    "initialization_concurrency": 4,
+    "min_free_gib": 5,
+    "archive_level": 9,
+    "github_repo": "liuhuijiayou/tick-futures-archive",
+    "backup_rights_status": "PENDING",
+    "installed_ns": 1793602549692515000,
+    "buffer_decision": "10000-row initialization tested; 1000-row deployed source window to admit all 870 contracts with bounded memory; older startup coverage remains audited as unknown"
+  },
+  "readiness_observed_within_seconds": 286.785002,
+  "interpretation": "Upper bound from latest heartbeat, not exact first-ready timestamp; full open-session capacity PENDING"
+}

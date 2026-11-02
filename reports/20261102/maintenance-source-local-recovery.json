@@ -1,0 +1,171 @@
+{
+  "started_ns": 1793620250333068000,
+  "ended_ns": 1793620252205037000,
+  "output": "/private/tmp/tick-maintenance-source-restore-8ee1baee749d47b98ded33f0fcfd1ee3",
+  "restore_report": {
+    "archive_id": "8ee1baee749d47b98ded33f0fcfd1ee3",
+    "status": "all_original_bytes_match",
+    "files": [
+      {
+        "path": "journal/journal.sqlite3",
+        "bytes": 250740736,
+        "sha256": "8e39cd3fd9d6258a61201a75a04fae6a5933c7744330d289e3496c8d3c1a9372"
+      },
+      {
+        "path": "quality/record-values.json",
+        "bytes": 337,
+        "sha256": "b6262d7310b1e08cf8e5e88b8a7097815d875321b2b3096d2fea2e8f43868343"
+      },
+      {
+        "path": "backfill-jobs/be4f0eb47e9249e49bca65abbe548c80/journal.sqlite3",
+        "bytes": 22069248,
+        "sha256": "153bc2c47dca1eb39c5c47481065189074d2fb2a88ae59c5b0fb9c04e28013ff"
+      },
+      {
+        "path": "backfill-jobs/be4f0eb47e9249e49bca65abbe548c80/completed.json",
+        "bytes": 1165,
+        "sha256": "5217300afeee4562feb70e8e7fe267c933a7d73360fced21334e69a6b4a84afe"
+      },
+      {
+        "path": "discovery/metadata-1793617314623799000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      },
+      {
+        "path": "discovery/universe-1793616677319438000.json",
+        "bytes": 16719,
+        "sha256": "9131c32d666082107559845c503f2e52ee5958351848d7a99a32b3e87b11b2a2"
+      },
+      {
+        "path": "discovery/universe-1793617961288298000.json",
+        "bytes": 16668,
+        "sha256": "e2169fccce262a4258bd8347a31edb83bc2b3551d0cbb51ba684eec9102468b9"
+      },
+      {
+        "path": "discovery/metadata-1793616977470320000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      },
+      {
+        "path": "discovery/metadata-1793618172625927000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      },
+      {
+        "path": "discovery/metadata-1793616077066230000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      },
+      {
+        "path": "discovery/universe-1793616077066230000.json",
+        "bytes": 16718,
+        "sha256": "9792ab15920ff38ffeda761d57bae4bdea3ceeba076b429dd1b8cdc58ca02599"
+      },
+      {
+        "path": "discovery/universe-1793618172625927000.json",
+        "bytes": 16667,
+        "sha256": "c764f6b35644a6c283a11c594d2be4c8ce7e650f9de0fb6865b515aead5ce008"
+      },
+      {
+        "path": "discovery/universe-1793617209097880000.json",
+        "bytes": 16668,
+        "sha256": "d5847dd537e9d1799e32d9f7b33cdbc6e5699123a92415eb407b8ef969c1bbff"
+      },
+      {
+        "path": "discovery/universe-1793618262507636000.json",
+        "bytes": 16719,
+        "sha256": "7b1bcbfa205c51f6c0cf6174c58b87e7efb4d80ad4ea9a470a91493207ec8e93"
+      },
+      {
+        "path": "discovery/calendar-1793617314623799000.json",
+        "bytes": 555428,
+        "sha256": "9915d4f1d390b6a8a39f7ca0b9d0a5e5700d6fab4811aa1934253dc8aa531643"
+      },
+      {
+        "path": "discovery/universe-1793616377259194000.json",
+        "bytes": 16719,
+        "sha256": "9dabd8f8a1485f8332fcc8a23a2195ed5830d6f25008e83948d36138798b7fd0"
+      },
+      {
+        "path": "discovery/universe-1793618562561963000.json",
+        "bytes": 16719,
+        "sha256": "2232b90f95acc2111b66ee62e040ebad4abb9923c71e2c142a4539c01ab7435b"
+      },
+      {
+        "path": "discovery/metadata-1793618562561963000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      },
+      {
+        "path": "discovery/universe-latest.json",
+        "bytes": 16719,
+        "sha256": "2232b90f95acc2111b66ee62e040ebad4abb9923c71e2c142a4539c01ab7435b"
+      },
+      {
+        "path": "discovery/metadata-1793616677319438000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      },
+      {
+        "path": "discovery/metadata-1793617961288298000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      },
+      {
+        "path": "discovery/universe-1793616977470320000.json",
+        "bytes": 16719,
+        "sha256": "4e0f4b516fafba78581e65510ceede418262b97cea5d71818854623af928682f"
+      },
+      {
+        "path": "discovery/metadata-1793618262507636000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      },
+      {
+        "path": "discovery/universe-1793617314623799000.json",
+        "bytes": 16668,
+        "sha256": "e33d9741bf8410c160ce19599ccb30d2334abb6a16d16237670c4f8e4e7229cc"
+      },
+      {
+        "path": "discovery/calendar-1793617209097880000.json",
+        "bytes": 555428,
+        "sha256": "db7b7217f278cf739044debe7b10707d77948f272d4ae4411d5f33ed99893241"
+      },
+      {
+        "path": "discovery/calendar-1793618172625927000.json",
+        "bytes": 555428,
+        "sha256": "8c1ff8a41175bf42f057f10e9d3455ae2b954e1f6dc3e9a8d6abbdc6cebbea29"
+      },
+      {
+        "path": "discovery/calendar-1793617961288298000.json",
+        "bytes": 555428,
+        "sha256": "4e470abd4205f6ce04bc385d612cebcaa4d862a259f95490d13ddc45a915d462"
+      },
+      {
+        "path": "discovery/metadata-1793617209097880000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      },
+      {
+        "path": "discovery/metadata-1793616377259194000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      }
+    ],
+    "collection_integrity": "evidence_insufficient",
+    "remote_restore": false
+  },
+  "journal_verifications": [
+    {
+      "path": "backfill-jobs/be4f0eb47e9249e49bca65abbe548c80/journal.sqlite3",
+      "status": "sqlite_and_all_record_bytes_types_bits_verified",
+      "rows": 10000
+    },
+    {
+      "path": "journal/journal.sqlite3",
+      "status": "sqlite_and_all_record_bytes_types_bits_verified",
+      "rows": 0
+    }
+  ],
+  "remote_restore": false
+}

@@ -1,0 +1,443 @@
+{
+  "observed_ns": 1793620406910167000,
+  "parent_market_runs": [
+    {
+      "run": "f4ee887d2a444b4388026d92cc33ab51",
+      "started_ns": 1793601625310363000,
+      "ended_ns": 1793602074694102000,
+      "status": "stopped",
+      "canonical_records_attributed": 25356
+    },
+    {
+      "run": "55527cda1b4f4631b1cf3f803a2e0a83",
+      "started_ns": 1793602081156824000,
+      "ended_ns": 1793602682760419000,
+      "status": "stopped",
+      "canonical_records_attributed": 549190
+    },
+    {
+      "run": "6d43a708bb0e412c97789b0633093ffe",
+      "started_ns": 1793602847059201000,
+      "ended_ns": 1793607764747378000,
+      "status": "stopped",
+      "canonical_records_attributed": 830033
+    },
+    {
+      "run": "9ba0b1e2e3a04a1e90ee0e994321afee",
+      "started_ns": 1793607800470953000,
+      "ended_ns": null,
+      "status": "unclean_exit",
+      "canonical_records_attributed": 9331
+    },
+    {
+      "run": "05c3710de1734a9e82e64415634fbca5",
+      "started_ns": 1793608340416379000,
+      "ended_ns": 1793610471183467000,
+      "status": "stopped",
+      "canonical_records_attributed": 1355893
+    },
+    {
+      "run": "b1c3a73f23e4463286c09a6dfebe244f",
+      "started_ns": 1793610521993834000,
+      "ended_ns": 1793611052577093000,
+      "status": "stopped",
+      "canonical_records_attributed": 9000
+    },
+    {
+      "run": "5935d606f63443489ad018babe40aefa",
+      "started_ns": 1793611103292555000,
+      "ended_ns": 1793611909817604000,
+      "status": "stopped",
+      "canonical_records_attributed": 17999
+    },
+    {
+      "run": "0433f09abe174dcf826ad7cea58ffce5",
+      "started_ns": 1793612043205307000,
+      "ended_ns": 1793614132004360000,
+      "status": "stopped",
+      "canonical_records_attributed": 134996
+    },
+    {
+      "run": "104db57b67ff4e088dfb32dd6987ee89",
+      "started_ns": 1793614198116661000,
+      "ended_ns": 1793614672397340000,
+      "status": "stopped",
+      "canonical_records_attributed": 0
+    },
+    {
+      "run": "7192af75bf934afe8a935f52745ad37c",
+      "started_ns": 1793614871257357000,
+      "ended_ns": 1793617612915240000,
+      "status": "stopped",
+      "canonical_records_attributed": 926962
+    },
+    {
+      "run": "61a9cf09cb734e7ea0af70462a471bce",
+      "started_ns": 1793617895242033000,
+      "ended_ns": 1793617925736111000,
+      "status": "failed",
+      "canonical_records_attributed": 0
+    },
+    {
+      "run": "880d9826bb96485f888a47615b4873d7",
+      "started_ns": 1793617955843719000,
+      "ended_ns": null,
+      "status": "running",
+      "canonical_records_attributed": 0
+    }
+  ],
+  "completed_helper_jobs": 50,
+  "helper_results": [
+    {
+      "job": "03f3cabcc435454a8f7e7f4487c2ffde",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "07668a6a2c564a4faf3aced127277c84",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "0aee2d976d67491ca5e852bbd8d36050",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "1805b5694b3a49fabc49a2c53c2f0859",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "2dd5fc07874744f88120e769ad3500d7",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "2f33f7060b9f449dbc8c9c78a8fd5f2d",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "30e75d02f8574eff97ae07bf34f33f86",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "35b0f09d8e564a09ab9b3ce9bfb87e56",
+      "initialization_complete": false,
+      "symbols": 8,
+      "written": 0,
+      "failures": {}
+    },
+    {
+      "job": "472b2cb4c68c46d3a8e160e118acbce7",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "475cff11ecad4aff875614e15fd14d40",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "5328a3b36d4d49558da71681743808e2",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "58d914010b0143c180192e0e35773ac1",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "58e773b8d9f24cfc994ee122f86f5ef8",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "610bf82d190b4ed9bb5f4aed8b8e10f4",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "64797d68d9ec409f9c79d686d23a58c1",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "67cb0c6c3e5c4c06aef5ab56cde5db26",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "7080515151914446b0fb415638e89afe",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "73612c4563244fac9aca1f684f3fd2e8",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "742fb10fe78e41b0a487b2b6f1ee3201",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "78bc8058ef884fc3a3230a6abc8f89f2",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "79728d6427654af7b7d2fb059ba1fd2d",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "7a95ca6f9ea04b4383cca705469ab0fd",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "7e9797be159b4d85965361a9eb1a1e93",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "7fa52cc8706d4a5b946e03d732130c19",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "834e7af1d89340039fe4096196e37b95",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "86caa47279d94238b6983411556f6ed1",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "88011a934df445af801906215deb3ebf",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "960fba2e6a514314afa0ab5a329d8fac",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "9731b6f7556b46a3962216ac047f838b",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "975fe1534c18486489fb4bd88d049295",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "ae48e2564d414c37be873bf069299935",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "aff621e8dd9641ec92dd3d0f5e4e791d",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "b12c3d15232f47398c973b4ca76671f2",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "be4f0eb47e9249e49bca65abbe548c80",
+      "initialization_complete": true,
+      "symbols": 1,
+      "written": 10000,
+      "failures": {}
+    },
+    {
+      "job": "c3c0198251b34e4d8c12e73fbc8ce00b",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "c3c9fbdab6c34f9da7606455da353492",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "c4ac8299250445ba901bb0de3ebadc03",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "c4b0b181fa294041b7676b16afdf51cc",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "c600650cc97b413abacf1799bc58531a",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "c7276bfddec9485597026d877f1bc6f4",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "ceff3d675df44a1d959f8ff3a2bdfcdd",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "concurrency-acceptance",
+      "initialization_complete": true,
+      "symbols": 1,
+      "written": 10000,
+      "failures": {}
+    },
+    {
+      "job": "dcac09adddd643b4bbd3f1113af3b7a5",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "e6b7528354024744ba2f7f7f7cddf39c",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "e90728491fa942a7bdb3a493e9ef3f07",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "ef062f7d784343f19784c91f855766af",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "ef7efdb23765415597697c0113e70daf",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "f4190914a9c84ed38a37eed4a043e0e1",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "f9ed5273fa8a4eb48dde3c65cefbd566",
+      "initialization_complete": true,
+      "symbols": 8,
+      "written": 80000,
+      "failures": {}
+    },
+    {
+      "job": "fc65f3ff409948a8a168dfdabab47072",
+      "initialization_complete": true,
+      "symbols": 7,
+      "written": 70000,
+      "failures": {}
+    }
+  ],
+  "note": "Completed job metadata can describe partial/empty attempts; runs include controlled upgrades and a failed startup, not independent complete market sessions."
+}

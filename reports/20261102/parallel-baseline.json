@@ -1,0 +1,15 @@
+{
+  "rows": 10000,
+  "decode_seconds": 0.3382974999999533,
+  "single_encode_seconds": 0.3829318749999402,
+  "current_full_import_seconds": 2.500792249999904,
+  "import_result": {
+    "written": 10000,
+    "seq": 10000,
+    "decision": "historical_content_replay_checked"
+  },
+  "source_bytes": 18030000,
+  "strict_encoded_original_equal": true,
+  "local_output": "/Users/liuhui/tick_futures/data/derived/parallel-baseline-7w4x20fa",
+  "note": "one 10000-row actual SDK historical window; shared host, no new network data or live speed claim"
+}

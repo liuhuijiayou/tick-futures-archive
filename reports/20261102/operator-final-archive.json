@@ -1,0 +1,83 @@
+{
+  "archive_id": "397167f7bf804eba86842ce3ad2ea860",
+  "scope": {
+    "first_seq": 3858761,
+    "last_seq": 3858760,
+    "rows": 0,
+    "contracts": [],
+    "gaps": {
+      "evidence_insufficient": 5,
+      "gap_pending_replay": 4,
+      "window_verified": 883
+    },
+    "collection_integrity": "evidence_insufficient",
+    "original_source_journals_added": 0,
+    "value_audit": {
+      "rows": 0,
+      "raw_hash_type_bit_roundtrip": "passed"
+    },
+    "source_semantics": "TqSdk snapshots; no exchange upstream completeness claim"
+  },
+  "restore_report": {
+    "archive_id": "397167f7bf804eba86842ce3ad2ea860",
+    "status": "all_original_bytes_match",
+    "files": [
+      {
+        "path": "journal/journal.sqlite3",
+        "bytes": 100159488,
+        "sha256": "1de1202feca84bdd48705405de22cc4af8cb17e547c3244a8b614706a2eb529d"
+      },
+      {
+        "path": "quality/record-values.json",
+        "bytes": 337,
+        "sha256": "2259d881b0b46ed465bd98910132304af5409692cde10b890ea30b876abc3361"
+      },
+      {
+        "path": "discovery/metadata-1793618862735147000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      },
+      {
+        "path": "discovery/universe-1793618862735147000.json",
+        "bytes": 16719,
+        "sha256": "c78426ecdc33806b8c3d2fba31e3e31a1787fc9aefd7d3abe68a0cd0ed4f2486"
+      },
+      {
+        "path": "discovery/metadata-1793619301211992000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      },
+      {
+        "path": "discovery/universe-1793619301211992000.json",
+        "bytes": 16719,
+        "sha256": "ac8927e35891850c1c369374f4a4fbb28aaca514085cce299967ca0e884c75b9"
+      },
+      {
+        "path": "discovery/universe-latest.json",
+        "bytes": 16719,
+        "sha256": "ac8927e35891850c1c369374f4a4fbb28aaca514085cce299967ca0e884c75b9"
+      },
+      {
+        "path": "discovery/metadata-1793619001056951000.tfrec",
+        "bytes": 1943802,
+        "sha256": "09d28e5029000dc132ff8a6d6ecee637b84278f4553107ec44cb70dcbb91debd"
+      },
+      {
+        "path": "discovery/universe-1793619001056951000.json",
+        "bytes": 16719,
+        "sha256": "b5d9c05653bcfb0fe1b643e51a085e54937a590c50def257abcca74736afaa98"
+      }
+    ],
+    "collection_integrity": "evidence_insufficient",
+    "remote_restore": false
+  },
+  "output": "/private/tmp/tick-operator-restore-397167f7bf804eba86842ce3ad2ea860",
+  "remote_restore": false,
+  "journal_verifications": [
+    {
+      "path": "journal/journal.sqlite3",
+      "status": "sqlite_and_all_record_bytes_types_bits_verified",
+      "rows": 0
+    }
+  ]
+}
