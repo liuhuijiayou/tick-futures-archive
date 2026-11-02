@@ -140,7 +140,11 @@ def service(role, root):
     config = json.loads(config_path(root).read_text())
     os.environ["TQ_AUTH_CONFIG"] = config["auth_config"]
     if role == "maintenance":
-        return maintenance(root,config)
+        try:
+            return maintenance(root,config)
+        except Exception as exc:
+            alert(root,"maintenance_failed",{"type":type(exc).__name__,"message":str(exc)})
+            raise
     from .collector import collect
     # launchd restarts on unexpected exit. Keep one receiver alive through
     # lunch/midnight/weekends; calendar is for auditing, never for cutting data.

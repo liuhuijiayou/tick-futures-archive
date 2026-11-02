@@ -79,7 +79,12 @@ class InstanceLock(AbstractContextManager):
 
 
 def alert(root, kind, detail):
-    obj = {"received_ns": time.time_ns(), "kind": kind, "detail": detail}
-    atomic_json(Path(root) / "last_alert.json", obj)
+    obj = redact_errors({"received_ns": time.time_ns(), "kind": kind, "detail": detail})
     # launchd captures stderr. No emails/webhooks or other messages are sent.
-    print(json.dumps(obj, ensure_ascii=False), file=__import__("sys").stderr, flush=True)
+    print(json.dumps(obj, ensure_ascii=False), file=sys.stderr, flush=True)
+    try:
+        atomic_json(Path(root) / "last_alert.json", obj)
+    except OSError as exc:
+        # A full/read-only disk must not suppress the stderr failure signal or
+        # replace the original collector/maintenance exception.
+        print(json.dumps({"kind":"alert_file_write_failed","error_type":type(exc).__name__}),file=sys.stderr,flush=True)
