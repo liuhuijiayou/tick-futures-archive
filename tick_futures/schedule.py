@@ -49,6 +49,12 @@ def manage(action, root, auth_config=None):
             stdout = "\n".join(line.strip() for line in stdout.splitlines()
                               if re.match(r"\s*(state|pid|runs|last exit code|path|program|working directory|throttle interval) =",line))
         return {"returncode":r.returncode,"stdout":stdout,"stderr":r.stderr}
+    def wait_absent(label):
+        deadline=time.monotonic()+50
+        while run(["print",domain+"/"+label])["returncode"]==0:
+            if time.monotonic()>=deadline:
+                raise TimeoutError("launchd has not unloaded "+label)
+            time.sleep(.2)
     if action == "install":
         if not auth_config:
             raise ValueError("Install requires explicit --auth-config path; no credential values are saved")
@@ -79,6 +85,13 @@ def manage(action, root, auth_config=None):
             loaded = run(["bootstrap",domain,str(path)])
             # Already loaded is handled by checking the actual job state.
             result = run(["print",domain+"/"+label])
+            if "state = SIGTERMed" in result["stdout"]:
+                # bootout returns before a receiver finishes its WAL drain.
+                # An immediate enable must not mistake that dying job for a
+                # newly bootstrapped receiver.
+                wait_absent(label)
+                loaded=run(["bootstrap",domain,str(path)])
+                result=run(["print",domain+"/"+label])
             if result["returncode"]:
                 raise RuntimeError(f"launchd could not enable {label}: {loaded['stderr']}")
             results[role] = result
@@ -87,6 +100,7 @@ def manage(action, root, auth_config=None):
         elif action in ("disable","uninstall"):
             results[role] = run(["bootout",domain+"/"+label])
             run(["disable",domain+"/"+label])
+            wait_absent(label)
             if action == "uninstall" and path.exists():
                 path.unlink()  # explicit project-only uninstall, no data deletion
     return {"action":action,"jobs":results,"user_login_required":True}
