@@ -47,9 +47,11 @@ def prepare(destination, live_root=None):
                           "bytes": path.stat().st_size, "sha256": file_hash(path)})
         db.close()
     lock=json.loads((BASE/"decoder/runtime-lock.json").read_text())
+    decoder_files=sorted((BASE/"tick_futures").glob("*.py"))+[BASE/"scripts/recover_github.py",BASE/"schema/tfrec-1.json"]
     result = {"files":files,"legacy_original_bytes":manifest["total_source_bytes"],
               "legacy_current_gzip_and_json_bytes":manifest["total_stored_bytes"],
-              "decoder_source_bytes":sum((BASE/"tick_futures"/p).stat().st_size for p in ("codec.py","archive.py","runtime.py")),
+              "decoder_source_bytes":sum(p.stat().st_size for p in decoder_files),
+              "decoder_source_files":[{"path":str(p.relative_to(BASE)),"bytes":p.stat().st_size,"sha256":file_hash(p)} for p in decoder_files],
               "dependency_declaration_bytes":(BASE/"pyproject.toml").stat().st_size+(BASE/"decoder/runtime-lock.json").stat().st_size,
               "core_runtime_wheel_bytes":lock["core_wheel_bytes"],
               "optional_parquet_wheel_bytes":lock["total_wheel_bytes"]-lock["core_wheel_bytes"],

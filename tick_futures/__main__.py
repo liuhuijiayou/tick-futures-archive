@@ -19,7 +19,7 @@ def main(argv=None):
         parser.add_argument("--max-contracts", type=int)
         parser.add_argument("--min-free-gib", type=float, default=5)
         parser.add_argument("--prepare-workers",type=int,default=2,choices=range(5))
-        parser.add_argument("--init-concurrency",type=int,default=8,choices=range(1,17))
+        parser.add_argument("--init-concurrency",type=int,default=4,choices=range(1,17))
         parser.add_argument("--initial-only",action="store_true",help="Stop after the complete initial window is committed")
     sub.add_parser("status")
     parser = sub.add_parser("overview")

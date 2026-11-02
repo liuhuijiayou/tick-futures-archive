@@ -28,6 +28,7 @@ def definition(role, root):
               "EnvironmentVariables":{"PATH":"/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin","PYTHONUNBUFFERED":"1"}}
     if role == "collector":
         result.update({"KeepAlive":True,"ThrottleInterval":30,"ExitTimeOut":45,
+                       "ProcessType":"Interactive","LowPriorityIO":False,"LowPriorityBackgroundIO":False,
                        "StartCalendarInterval":[{"Hour":7,"Minute":30},{"Hour":19,"Minute":30}]})
     else:
         result.update({"StartInterval":300,"Nice":15})
@@ -64,7 +65,7 @@ def manage(action, root, auth_config=None):
         root.mkdir(parents=True,exist_ok=True,mode=0o700)
         (root/"logs").mkdir(exist_ok=True,mode=0o700)
         settings={"auth_config":str(auth_config),"data_length":1000,
-                    "preparation_workers":2,"initialization_concurrency":8,
+                    "preparation_workers":2,"initialization_concurrency":4,
                     "min_free_gib":5,"archive_level":9,"github_repo":"liuhuijiayou/tick-futures-archive",
                     "backup_rights_status":"PENDING","installed_ns":time.time_ns()}
         if config_path(root).exists():
@@ -164,4 +165,4 @@ def service(role, root):
     # launchd restarts on unexpected exit. Keep one receiver alive through
     # lunch/midnight/weekends; calendar is for auditing, never for cutting data.
     return collect(root,data_length=config["data_length"],min_free_bytes=int(config["min_free_gib"]*1024**3),
-                   preparation_workers=config.get("preparation_workers",2),initial_concurrency=config.get("initialization_concurrency",8))
+                   preparation_workers=config.get("preparation_workers",2),initial_concurrency=config.get("initialization_concurrency",4))

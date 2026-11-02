@@ -237,7 +237,10 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     backfill_todo.append(symbol)
             # Create subscriptions from a public API coroutine to avoid the
             # synchronous get_tick_serial initialization starving existing ones.
-            initializing = sum(v["state"] == "initializing" and s not in failures for s,v in subscriptions.items())
+            # Timed-out frames are still subscribed inside the SDK. They must
+            # retain their admission slots until ready; ignoring them could
+            # accumulate unbounded incomplete windows and starve ready quotes.
+            initializing = sum(v["state"] == "initializing" for v in subscriptions.values())
             initializing += sum(not api.is_serial_ready(f) for f in upgrade_frames.values())
             memory_ok = process.memory_info().rss < 12*1024**3 and psutil.virtual_memory().available>4*1024**3
             metrics["initialization_paused_for_memory"] = not memory_ok
@@ -249,6 +252,8 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                         frames[symbol] = api.get_tick_serial(symbol, data_length=data_length)
                     except Exception as exc:
                         failures[symbol] = {"type": type(exc).__name__, "message": str(exc)}
+                        subscriptions[symbol]["state"]="subscription_failed"
+                        alert(root,"subscription_failed",{"symbol":symbol,**failures[symbol]})
                 api.create_task(subscribe())
             if backfill_child is not None and backfill_child.poll() is not None:
                 completed=backfill_job/"completed.json"
@@ -311,6 +316,7 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                 if not api.is_serial_ready(frame):
                     if time.monotonic() - sub["started"] > 180 and symbol not in failures:
                         failures[symbol] = {"type": "InitializationTimeout", "message": "No serial confirmation in 180s; still monitoring"}
+                        alert(root,"subscription_initialization_timeout",{"symbol":symbol,**failures[symbol]})
                     continue
                 if symbol in pending_symbols or writer.inbox.full():
                     continue

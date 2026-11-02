@@ -211,6 +211,36 @@ class Collection(unittest.TestCase):
             self.assertGreater(api.calls,5)
             db.close()
 
+    def test_timed_out_initializations_keep_their_admission_slots(self):
+        import asyncio
+        from tick_futures.collector import collect
+        from tick_futures.runtime import atomic_bytes
+        symbols=[f"SHFE.fixture{i}" for i in range(4)]
+        class Api:
+            created=[]
+            def create_task(self,coro): return asyncio.run(coro)
+            def get_tick_serial(self,symbol,**kw):
+                self.created.append(symbol)
+                return pd.DataFrame([row(1)])
+            def is_serial_ready(self,frame): return False
+            def is_changing(self,frame): return False
+            def wait_update(self,**kw): return False
+            def close(self): pass
+        api=Api()
+        def discover(api,path):
+            path.mkdir(parents=True,exist_ok=True)
+            atomic_bytes(path/"metadata.tfrec",dumps([{"instrument_id":s} for s in symbols]))
+            return {"version":"fixture","symbols":symbols,"metadata_file":"metadata.tfrec"}
+        tick=[0]
+        def monotonic():
+            tick[0]+=5
+            return tick[0]
+        with tempfile.TemporaryDirectory() as folder,patch("tick_futures.collector.connect",return_value=api),patch("tick_futures.collector.discover",side_effect=discover),patch("tick_futures.collector.time.monotonic",side_effect=monotonic),patch("tick_futures.collector.alert"):
+            result=collect(folder,seconds=1000,initial_concurrency=2,min_free_bytes=0,refresh_seconds=100000)
+        self.assertEqual(len(api.created),2)
+        self.assertEqual(len(result["failures"]),2)
+        self.assertFalse(result["initialization_complete"])
+
     def test_window_exceeded_and_id_reset_are_not_silently_deduplicated(self):
         with tempfile.TemporaryDirectory() as folder:
             db = Store(folder, min_free_bytes=0)
