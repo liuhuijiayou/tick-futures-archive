@@ -1,0 +1,37 @@
+{
+  "observed_ns": 1793622782510491000,
+  "selection_start_ns": 1793601625310363000,
+  "selection_end_ns": 1793602800000000000,
+  "sampling_policy": "one original snapshot per contract/source-event second; greatest event_ns then greatest persistence seq; all fields/types/bits retained for selected records, no fabricated quiet seconds",
+  "subsecond_tick_information_intentionally_not_retained_in_projection": true,
+  "original_tick_data_unchanged": true,
+  "compression": "Zstd 9 checksum, TFREC1 lines, no dictionary",
+  "scopes": {
+    "all_listed": {
+      "selected_snapshots": 445862,
+      "raw_tfrec_bytes": 803616354,
+      "raw_sha256": "d88d283eb131c47c76aa41d7a7a8139386765a9773579203fa0642fc387c31fc",
+      "contracts": 870,
+      "compressed_bytes": 8795213,
+      "output": "data/derived/seconds-sizing/1793622257277976000/snapshots.tfrec.zst",
+      "compressed_sha256": "974da961f7e54334f19e43467aed85b6c5df671af157f550739ccb31fd94162a",
+      "strict_byte_roundtrip": "passed"
+    },
+    "provider_main": {
+      "selected_snapshots": 81693,
+      "raw_tfrec_bytes": 147240193,
+      "raw_sha256": "4dc38ebc8ee59b4d2b8e94adb619b25e89981400a2ba8e07e1cb983ed4779e60",
+      "contracts": 87,
+      "compressed_bytes": 2171706,
+      "output": "data/derived/seconds-sizing/1793622257277976000/main-snapshots.tfrec.zst",
+      "compressed_sha256": "4bc707097693d9cee31945e403de9592728ca1698351a10ff333604bf859fd79",
+      "strict_byte_roundtrip": "passed"
+    }
+  },
+  "independent_decode_hash_checks": 2,
+  "filter_and_verify_seconds": 6.606809832999716,
+  "initial_all_contract_scan_timing": "not retained after metadata None exception; no timing claim",
+  "production_collection_changed": false,
+  "main_mapping_version": "1793622645628898000",
+  "new_data_does_not_prove_full_day_coverage": true
+}

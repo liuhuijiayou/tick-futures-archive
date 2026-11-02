@@ -1,0 +1,14 @@
+{
+  "source": "TqSdk.query_symbol_info",
+  "rows": [
+    {
+      "instrument_id": "CZCE.LR601",
+      "ins_class": "FUTURE",
+      "expired": "True",
+      "delivery_year": "2026.0",
+      "delivery_month": "1.0",
+      "expire_datetime": "1768546800.0"
+    }
+  ],
+  "collection_filter_unchanged": true
+}

@@ -1,0 +1,470 @@
+{
+  "format": "tfmain-1",
+  "version": "1793622645628898000",
+  "observed_ns": 1793622645628898000,
+  "source": "TqSdk.query_cont_quotes",
+  "definition": "provider current main underlying, not an exchange universal standard",
+  "account_mode": "TqSim",
+  "universe_version": "1793622601088214000",
+  "expected_products": 87,
+  "selected_contracts": 87,
+  "exchange_counts": {
+    "CFFEX": 8,
+    "CZCE": 26,
+    "DCE": 23,
+    "GFEX": 5,
+    "INE": 5,
+    "SHFE": 20
+  },
+  "mapping": [
+    {
+      "exchange": "CFFEX",
+      "product": "IC",
+      "symbol": "CFFEX.IC2612"
+    },
+    {
+      "exchange": "CFFEX",
+      "product": "IF",
+      "symbol": "CFFEX.IF2612"
+    },
+    {
+      "exchange": "CFFEX",
+      "product": "IH",
+      "symbol": "CFFEX.IH2612"
+    },
+    {
+      "exchange": "CFFEX",
+      "product": "IM",
+      "symbol": "CFFEX.IM2612"
+    },
+    {
+      "exchange": "CFFEX",
+      "product": "T",
+      "symbol": "CFFEX.T2612"
+    },
+    {
+      "exchange": "CFFEX",
+      "product": "TF",
+      "symbol": "CFFEX.TF2612"
+    },
+    {
+      "exchange": "CFFEX",
+      "product": "TL",
+      "symbol": "CFFEX.TL2612"
+    },
+    {
+      "exchange": "CFFEX",
+      "product": "TS",
+      "symbol": "CFFEX.TS2612"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "AP",
+      "symbol": "CZCE.AP701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "CF",
+      "symbol": "CZCE.CF701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "CJ",
+      "symbol": "CZCE.CJ701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "CY",
+      "symbol": "CZCE.CY701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "FG",
+      "symbol": "CZCE.FG701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "JR",
+      "symbol": "CZCE.JR701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "MA",
+      "symbol": "CZCE.MA701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "OI",
+      "symbol": "CZCE.OI701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "PF",
+      "symbol": "CZCE.PF612"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "PK",
+      "symbol": "CZCE.PK612"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "PL",
+      "symbol": "CZCE.PL612"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "PM",
+      "symbol": "CZCE.PM701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "PR",
+      "symbol": "CZCE.PR612"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "PX",
+      "symbol": "CZCE.PX612"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "RI",
+      "symbol": "CZCE.RI701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "RM",
+      "symbol": "CZCE.RM701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "RS",
+      "symbol": "CZCE.RS701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "SA",
+      "symbol": "CZCE.SA701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "SF",
+      "symbol": "CZCE.SF701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "SH",
+      "symbol": "CZCE.SH701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "SM",
+      "symbol": "CZCE.SM701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "SR",
+      "symbol": "CZCE.SR701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "TA",
+      "symbol": "CZCE.TA701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "UR",
+      "symbol": "CZCE.UR701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "WH",
+      "symbol": "CZCE.WH701"
+    },
+    {
+      "exchange": "CZCE",
+      "product": "ZC",
+      "symbol": "CZCE.ZC701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "a",
+      "symbol": "DCE.a2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "b",
+      "symbol": "DCE.b2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "bb",
+      "symbol": "DCE.bb2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "bz",
+      "symbol": "DCE.bz2612"
+    },
+    {
+      "exchange": "DCE",
+      "product": "c",
+      "symbol": "DCE.c2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "cs",
+      "symbol": "DCE.cs2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "eb",
+      "symbol": "DCE.eb2612"
+    },
+    {
+      "exchange": "DCE",
+      "product": "eg",
+      "symbol": "DCE.eg2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "fb",
+      "symbol": "DCE.fb2612"
+    },
+    {
+      "exchange": "DCE",
+      "product": "i",
+      "symbol": "DCE.i2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "j",
+      "symbol": "DCE.j2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "jd",
+      "symbol": "DCE.jd2612"
+    },
+    {
+      "exchange": "DCE",
+      "product": "jm",
+      "symbol": "DCE.jm2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "l",
+      "symbol": "DCE.l2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "lg",
+      "symbol": "DCE.lg2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "lh",
+      "symbol": "DCE.lh2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "m",
+      "symbol": "DCE.m2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "p",
+      "symbol": "DCE.p2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "pg",
+      "symbol": "DCE.pg2612"
+    },
+    {
+      "exchange": "DCE",
+      "product": "pp",
+      "symbol": "DCE.pp2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "rr",
+      "symbol": "DCE.rr2612"
+    },
+    {
+      "exchange": "DCE",
+      "product": "v",
+      "symbol": "DCE.v2701"
+    },
+    {
+      "exchange": "DCE",
+      "product": "y",
+      "symbol": "DCE.y2701"
+    },
+    {
+      "exchange": "GFEX",
+      "product": "lc",
+      "symbol": "GFEX.lc2701"
+    },
+    {
+      "exchange": "GFEX",
+      "product": "pd",
+      "symbol": "GFEX.pd2612"
+    },
+    {
+      "exchange": "GFEX",
+      "product": "ps",
+      "symbol": "GFEX.ps2612"
+    },
+    {
+      "exchange": "GFEX",
+      "product": "pt",
+      "symbol": "GFEX.pt2612"
+    },
+    {
+      "exchange": "GFEX",
+      "product": "si",
+      "symbol": "GFEX.si2612"
+    },
+    {
+      "exchange": "INE",
+      "product": "bc",
+      "symbol": "INE.bc2612"
+    },
+    {
+      "exchange": "INE",
+      "product": "ec",
+      "symbol": "INE.ec2612"
+    },
+    {
+      "exchange": "INE",
+      "product": "lu",
+      "symbol": "INE.lu2701"
+    },
+    {
+      "exchange": "INE",
+      "product": "nr",
+      "symbol": "INE.nr2701"
+    },
+    {
+      "exchange": "INE",
+      "product": "sc",
+      "symbol": "INE.sc2612"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "ad",
+      "symbol": "SHFE.ad2701"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "ag",
+      "symbol": "SHFE.ag2612"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "al",
+      "symbol": "SHFE.al2612"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "ao",
+      "symbol": "SHFE.ao2701"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "au",
+      "symbol": "SHFE.au2612"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "br",
+      "symbol": "SHFE.br2612"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "bu",
+      "symbol": "SHFE.bu2701"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "cu",
+      "symbol": "SHFE.cu2612"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "fu",
+      "symbol": "SHFE.fu2701"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "hc",
+      "symbol": "SHFE.hc2701"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "ni",
+      "symbol": "SHFE.ni2612"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "op",
+      "symbol": "SHFE.op2612"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "pb",
+      "symbol": "SHFE.pb2612"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "rb",
+      "symbol": "SHFE.rb2701"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "ru",
+      "symbol": "SHFE.ru2701"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "sn",
+      "symbol": "SHFE.sn2612"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "sp",
+      "symbol": "SHFE.sp2701"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "ss",
+      "symbol": "SHFE.ss2612"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "wr",
+      "symbol": "SHFE.wr2701"
+    },
+    {
+      "exchange": "SHFE",
+      "product": "zn",
+      "symbol": "SHFE.zn2612"
+    }
+  ],
+  "missing": [],
+  "ambiguous": [],
+  "rejected": [
+    {
+      "symbol": "CZCE.LR601",
+      "exchange": "CZCE",
+      "reason": "not an unexpired real future in the versioned source catalog"
+    }
+  ],
+  "failures": [],
+  "status": "incomplete",
+  "elapsed_seconds": 0.05068133300119371,
+  "production_universe_changed": false,
+  "roll_policy_required": "save mappings before day/night open and on reconnect; overlap old/new months when mapping changes"
+}

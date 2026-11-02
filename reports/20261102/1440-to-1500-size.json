@@ -1,0 +1,39 @@
+{
+  "observed_ns": 1793621637202533000,
+  "scope": "source event time 2026-11-02 14:40:25 inclusive to 15:00:00 exclusive Asia/Shanghai",
+  "target_start_ns_with_fraction": 1793601625310363000,
+  "selection_start_ns": 1793601625000000000,
+  "selection_end_ns": 1793602800000000000,
+  "groups": [
+    {
+      "origin": "initial_backfill",
+      "records": 512091,
+      "raw_tfrec_bytes": 922980870,
+      "first_source_event_ns": 1793601625000000000,
+      "last_source_event_ns": 1793602799999501056,
+      "contracts": 870
+    },
+    {
+      "origin": "realtime_update",
+      "records": 8244,
+      "raw_tfrec_bytes": 14860947,
+      "first_source_event_ns": 1793601763500000000,
+      "last_source_event_ns": 1793602799999501056,
+      "contracts": 342
+    },
+    {
+      "origin": "recovery_backfill",
+      "records": 220110,
+      "raw_tfrec_bytes": 396746914,
+      "first_source_event_ns": 1793601625000000000,
+      "last_source_event_ns": 1793602424000000000,
+      "contracts": 272
+    }
+  ],
+  "total_records": 740445,
+  "raw_tfrec_bytes": 1334588731,
+  "includes_later_backfill_and_revision": true,
+  "actual_realtime_received_count_not_inferred": true,
+  "complete_upstream_events_proven": false,
+  "note": "Raw TFREC payload only; SQLite indexes/observations, historical records outside this interval, source journals, staging, archives and recovery copies excluded. Identical timestamp/ID revisions remain separate retained records."
+}

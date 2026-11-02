@@ -1,0 +1,87 @@
+{
+  "format": "tfcapacity-1",
+  "universe_version": "1793622601088214000",
+  "main_mapping_version": "1793622645628898000",
+  "main_mapping_status": "incomplete",
+  "sampling_policy": "one original snapshot per contract/source-event second; greatest event_ns then greatest persistence seq; all fields/types/bits retained for selected records, no fabricated quiet seconds",
+  "scopes": {
+    "all_listed": {
+      "contracts": 870,
+      "quote_seconds": 17807400,
+      "unknown_sessions": [],
+      "basis": "one snapshot per configured trading second on an ordinary trading day; no fabricated quiet-second rows",
+      "measured_rows": 445862,
+      "measured_raw_bytes": 803616354,
+      "measured_compressed_bytes": 8795213,
+      "bytes_per_measured_snapshot": 19.72631217731047,
+      "projected_day_raw_bytes": 32095845491,
+      "projected_day_payload_bytes": 351274332,
+      "planning_day_bytes_at_3x_payload": 1053822996
+    },
+    "provider_main": {
+      "contracts": 87,
+      "quote_seconds": 1698300,
+      "unknown_sessions": [],
+      "basis": "one snapshot per configured trading second on an ordinary trading day; no fabricated quiet-second rows",
+      "measured_rows": 81693,
+      "measured_raw_bytes": 147240193,
+      "measured_compressed_bytes": 2171706,
+      "bytes_per_measured_snapshot": 26.583746465425435,
+      "projected_day_raw_bytes": 3060947937,
+      "projected_day_payload_bytes": 45147177,
+      "planning_day_bytes_at_3x_payload": 135441531
+    }
+  },
+  "local_total_budget_bytes": 100000000000,
+  "budget_is_per_day": false,
+  "planning_multiplier_is_measured": false,
+  "forecast_not_complete_open_day_measurement": true,
+  "exclusions": "Daily payload forecast excludes retained old evidence/test copies, hot SQLite, staging, runtime and restoration copies. 3x is a planning scenario, not a guaranteed compression bound.",
+  "polling_scenarios": [
+    {
+      "assumed_source_rows_per_second": 1,
+      "maximum_rows": 10000,
+      "theoretical_history_seconds": 10000.0,
+      "overlap_fraction": 0.3,
+      "fetch_seconds": 300,
+      "retry_seconds": 600,
+      "scenario_max_interval_seconds": 6100.0,
+      "source_peak_rate_certified": false,
+      "note": "Saving one snapshot per second does not enlarge the source Tick row window"
+    },
+    {
+      "assumed_source_rows_per_second": 2,
+      "maximum_rows": 10000,
+      "theoretical_history_seconds": 5000.0,
+      "overlap_fraction": 0.3,
+      "fetch_seconds": 300,
+      "retry_seconds": 600,
+      "scenario_max_interval_seconds": 2600.0,
+      "source_peak_rate_certified": false,
+      "note": "Saving one snapshot per second does not enlarge the source Tick row window"
+    },
+    {
+      "assumed_source_rows_per_second": 3,
+      "maximum_rows": 10000,
+      "theoretical_history_seconds": 3333.3333333333335,
+      "overlap_fraction": 0.3,
+      "fetch_seconds": 300,
+      "retry_seconds": 600,
+      "scenario_max_interval_seconds": 1433.3333333333335,
+      "source_peak_rate_certified": false,
+      "note": "Saving one snapshot per second does not enlarge the source Tick row window"
+    },
+    {
+      "assumed_source_rows_per_second": 5,
+      "maximum_rows": 10000,
+      "theoretical_history_seconds": 2000.0,
+      "overlap_fraction": 0.3,
+      "fetch_seconds": 300,
+      "retry_seconds": 600,
+      "scenario_max_interval_seconds": 500.0,
+      "source_peak_rate_certified": false,
+      "note": "Saving one snapshot per second does not enlarge the source Tick row window"
+    }
+  ],
+  "production_schedule_or_retention_changed": false
+}

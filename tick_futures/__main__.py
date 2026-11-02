@@ -11,6 +11,10 @@ def main(argv=None):
     p.add_argument("--root", type=Path, default=Path("data/derived/market"))
     sub = p.add_subparsers(dest="command", required=True)
     sub.add_parser("discover")
+    sub.add_parser("discover-main")
+    parser = sub.add_parser("capacity")
+    parser.add_argument("--benchmark", type=Path, default=Path("reports/20261102/second-capacity-benchmark.json"))
+    parser.add_argument("--output", type=Path)
     for name in ("collect", "backfill"):
         parser = sub.add_parser(name)
         parser.add_argument("--symbols", nargs="+")
@@ -66,6 +70,22 @@ def main(argv=None):
                 result = discover(api, args.root / "discovery")
             finally:
                 api.close()
+        elif args.command == "discover-main":
+            from .source import connect
+            from .main_contracts import discover_mains
+            from .runtime import InstanceLock
+            with InstanceLock(args.root / "backfill-worker.lock"):
+                api = connect()
+                try:
+                    result = discover_mains(api, args.root / "discovery", args.root / "main-discovery")
+                finally:
+                    api.close()
+        elif args.command == "capacity":
+            from .capacity import capacity_plan
+            from .runtime import atomic_json
+            result = capacity_plan(args.root, args.benchmark)
+            if args.output:
+                atomic_json(args.output, result)
         elif args.command in ("collect", "backfill"):
             if not 1 <= args.data_length <= 10000 or (args.seconds is not None and args.seconds <= 0):
                 p.error("data-length must be 1..10000 and seconds must be positive")
