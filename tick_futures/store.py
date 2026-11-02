@@ -127,8 +127,8 @@ class Store:
         input_fingerprints=[fp for raw,fp in encoded]
         received_ns = received_ns or time.time_ns()
         previous_seq, old_tail = self.checkpoint(symbol)
-        full_first_ns=int(rows[0]["datetime"]) if rows else None
-        full_last_ns=int(rows[-1]["datetime"]) if rows else None
+        full_first_ns=min((int(r["datetime"]) for r in rows),default=None)
+        full_last_ns=max((int(r["datetime"]) for r in rows),default=None)
         input_count = len(rows)
         current_tail = (tail if tail is not None else rows[-64:])
         if full_window:
@@ -206,12 +206,20 @@ class Store:
             if update_checkpoint:
                 self.db.execute("INSERT INTO checkpoints VALUES(?,?,?,?) ON CONFLICT(symbol) DO UPDATE SET seq=excluded.seq,tail=excluded.tail,updated_ns=excluded.updated_ns",
                                 (symbol, last_seq, dumps(current_tail), received_ns))
-            self.db.execute("UPDATE contracts SET earliest_ns=CASE WHEN earliest_ns IS NULL THEN ? ELSE min(earliest_ns,?) END,status='subscribed' WHERE symbol=?",
+            self.db.execute("UPDATE contracts SET earliest_ns=CASE WHEN earliest_ns IS NULL THEN ? ELSE min(earliest_ns,?) END,status=CASE WHEN ? THEN 'subscribed' ELSE status END WHERE symbol=?",
                             (min((int(r["datetime"]) for r in rows), default=received_ns),
-                             min((int(r["datetime"]) for r in rows), default=received_ns), symbol))
+                             min((int(r["datetime"]) for r in rows), default=received_ns),update_checkpoint, symbol))
             if full_window and (window_info or {}).get("configured_rows",0)>=10000 and (window_info or {}).get("source_journal_gap_count",0)==0 and (detail["decision"]=="content_overlap" or (detail["decision"]=="historical_content_replay_checked" and detail["replayed"]>0)):
                 for gap_id,kind,start,end,gap_detail in self.db.execute("SELECT seq,kind,start_ns,end_ns,detail FROM gaps WHERE symbol=? AND status='gap_pending_replay'",(symbol,)).fetchall():
                     if kind not in ("startup_window_after_target","window_exceeded") or start is None or end is None:
+                        continue
+                    if full_first_ns is not None and full_last_ns>=end and full_first_ns>start:
+                        status="gap_unrecoverable" if input_count>=10000 else "evidence_insufficient"
+                        self.event(symbol,"maximum_source_window_cannot_verify_interval",{"gap_id":gap_id,
+                            "previous_status":"gap_pending_replay","status":status,"returned_rows":input_count,
+                            "source_first_ns":full_first_ns,"source_last_ns":full_last_ns,
+                            "note":"Maximum authorized recent window inspected; missing Tick count unknown, no fabricated fills"})
+                        self.db.execute("UPDATE gaps SET status=? WHERE seq=?",(status,gap_id))
                         continue
                     if full_first_ns is None or full_first_ns>start or full_last_ns<end:
                         continue

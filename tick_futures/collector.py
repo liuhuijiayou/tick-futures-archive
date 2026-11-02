@@ -28,6 +28,7 @@ from .runtime import InstanceLock, alert, atomic_json
 from .source import connect, discover, refresh_universe
 from .store import DurableWriter, Store
 from .sessions import classify
+from .operations import admit_requests,forced_symbols,complete_requests,request_states
 
 
 def changed_rows(current, committed):
@@ -136,6 +137,9 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
     backfill_job=None
     backfill_tokens={}
     recovery_jobs={}
+    request_seen=set()
+    backfill_symbols=[]
+    retry_backfill_after=0
     def copy_helper_metadata(job):
         from .runtime import atomic_bytes
         for path in (Path(job)/"discovery").glob("*"):
@@ -162,6 +166,12 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
             receipt=json.loads(receipt_path.read_text()) if receipt_path.exists() else {"symbols":{}}
             receipt["symbols"][symbol]=result
             atomic_json(receipt_path,receipt)
+            info=recovery_jobs.get(job,{})
+            request_result=dict(result)
+            if not info.get("initialization_complete",True):
+                request_result["error"]="Source helper did not fully initialize; partial records retained"
+                alert(root,"backfill_source_partial",{"symbol":symbol,"job":Path(job).name})
+            complete_requests(root,symbol,info.get("completed_ns",0),request_result)
             with store.db:
                 store.event(symbol,"backfill_import_failed" if "error" in result else "backfill_import_committed",{**result,"job":Path(job).name})
             if "error" in result:
@@ -262,15 +272,31 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     copy_helper_metadata(backfill_job)
                 else:
                     alert(root,"isolated_backfill_failed",{"job":backfill_job.name,"exit_code":backfill_child.returncode})
+                    for symbol in backfill_symbols:
+                        backfill_requested.discard(symbol)
+                        complete_requests(root,symbol,time.time_ns(),{"error":"Backfill helper exited without a completed source journal"})
+                    backfill_todo.extend(backfill_symbols)
+                    retry_backfill_after=time.monotonic()+60
                 backfill_child=None
-            if backfill_todo and backfill_child is None and len(recovery_jobs)<2 and not todo and memory_ok and not initial_only and shutil.disk_usage(root).free>20*1024**3:
+            if backfill_todo and backfill_child is None and len(recovery_jobs)<2 and not todo and memory_ok and not initial_only and time.monotonic()>=retry_backfill_after and shutil.disk_usage(root).free>20*1024**3:
                 batch=[]
-                while backfill_todo and len(batch)<8:
+                forced=forced_symbols(root)
+                needed={s for s, in store.db.execute("SELECT DISTINCT symbol FROM gaps WHERE symbol IS NOT NULL AND (status='gap_pending_replay' OR (kind='id_reset_or_source_change' AND status='evidence_insufficient'))")}
+                for _ in range(len(backfill_todo)):
                     symbol=backfill_todo.popleft()
-                    if symbol not in backfill_requested and symbol in frames:
+                    if symbol not in forced and symbol not in needed:
+                        continue
+                    if (symbol not in frames and symbol not in forced) or symbol in backfill_requested:
+                        if symbol in forced:
+                            backfill_todo.append(symbol)
+                        continue
+                    if symbol not in backfill_requested:
                         batch.append(symbol)
                         backfill_requested.add(symbol)
+                    if len(batch)>=8:
+                        break
                 if batch:
+                    backfill_symbols=list(batch)
                     backfill_job=root/"backfill-jobs"/uuid.uuid4().hex
                     backfill_job.mkdir(parents=True)
                     backfill_child=subprocess.Popen([sys.executable,"-m","tick_futures.backfill_worker",
@@ -382,6 +408,7 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                     "backfill_ready_jobs":len(recovery_jobs),
                     "backfill_waiting_import_contracts":sum(len(set(info["symbols"])-set(json.loads((Path(job)/"import-receipt.json").read_text())["symbols"] if (Path(job)/"import-receipt.json").exists() else [])) for job,info in recovery_jobs.items()),
                     "preparation_workers":preparation_workers,"initialization_concurrency":initial_concurrency,
+                    "backfill_request_states":request_states(root),
                     "coverage_status": "PENDING full day and source replay verification"}
                 atomic_json(root / "heartbeat.json", status)
                 last_heartbeat = time.monotonic()
@@ -396,19 +423,8 @@ def _collect(root, *, symbols, data_length, seconds, max_contracts, min_free_byt
                                           "note":"No fixed Tick rate assumed; transport/normal quiet cannot be distinguished"},status="evidence_insufficient")
                             last_unknown[symbol] = time.monotonic()
                             alert(root,"active_session_silence_unknown",{"symbol":symbol,"silence_seconds":silence})
-                requests = root/"requests"
-                for request in requests.glob("backfill-*.json") if requests.exists() else []:
-                    command = json.loads(request.read_text())
-                    if command.get("status") != "pending":
-                        continue
-                    selected = command.get("symbols") or [s for s, in store.db.execute("SELECT DISTINCT symbol FROM gaps WHERE status='gap_pending_replay' AND symbol IS NOT NULL")]
-                    rejected = [s for s in selected if s not in all_symbols]
-                    accepted = [s for s in selected if s in all_symbols]
-                    for s in accepted:
-                        backfill_requested.discard(s)
-                    backfill_todo.extend(accepted)
-                    command.update({"status":"queued" if accepted else "no_pending_contract_gaps","symbols":accepted,"rejected":rejected})
-                    atomic_json(request,command)
+                needed=[s for s, in store.db.execute("SELECT DISTINCT symbol FROM gaps WHERE status='gap_pending_replay' AND symbol IS NOT NULL")]
+                backfill_todo.extend(admit_requests(root,all_symbols,needed,request_seen))
             # Bounded parallel CPU preparation, one ordered transactional writer.
             # Dispatch on every receive loop, not only the five-second heartbeat.
             # Keep cold work out of initial admission and give live work priority.
